@@ -1,0 +1,7 @@
+<?pun
+	kaam add(a, b) {
+		wapas a + b;
+	}
+	dasso "sat sri akaal<br>";
+	dasso add(2, 3);
+?>

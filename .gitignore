@@ -1,0 +1,4 @@
+# Maven build output: keep only the runnable JAR and the docs
+target/*
+!target/pun-server.jar
+!target/*.md
