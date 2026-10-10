@@ -1,0 +1,41 @@
+{
+  "name": "pun-language",
+  "displayName": "Pun Language",
+  "description": "Syntax highlighting for Pun (.pun) template files",
+  "version": "0.0.1",
+  "publisher": "local",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "pun",
+        "aliases": ["Pun", "pun"],
+        "extensions": [".pun"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pun",
+        "scopeName": "text.html.pun",
+        "path": "./syntaxes/pun.tmLanguage.json",
+        "embeddedLanguages": {
+          "text.html": "html",
+          "source.css": "css",
+          "source.js": "javascript",
+          "source.pun": "pun"
+        }
+      },
+      {
+        "scopeName": "source.pun",
+        "path": "./syntaxes/pun-source.tmLanguage.json"
+      }
+    ]
+  }
+}

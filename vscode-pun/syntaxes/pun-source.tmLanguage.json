@@ -1,0 +1,134 @@
+{
+  "name": "Pun Source",
+  "scopeName": "source.pun",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#function-declaration" },
+    { "include": "#keywords" },
+    { "include": "#constants" },
+    { "include": "#builtins" },
+    { "include": "#member-access" },
+    { "include": "#function-call" },
+    { "include": "#operators" },
+    { "include": "#punctuation" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "comment": "The server ends a block at the first ?> even inside a comment or string, so these stop there too.",
+      "patterns": [
+        {
+          "name": "comment.block.pun",
+          "begin": "/\\*",
+          "end": "\\*/|(?=\\?>)",
+          "captures": {
+            "0": { "name": "punctuation.definition.comment.pun" }
+          }
+        },
+        {
+          "name": "comment.line.double-slash.pun",
+          "begin": "//",
+          "end": "$|(?=\\?>)",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.pun" }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.pun",
+      "begin": "\"",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.pun" }
+      },
+      "end": "\"|(?=\\?>)",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.pun" }
+      },
+      "patterns": [
+        { "name": "constant.character.escape.pun", "match": "\\\\." }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.pun",
+      "match": "\\b\\d+(?:\\.\\d+)?\\b"
+    },
+    "function-declaration": {
+      "match": "\\b(kaam)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "storage.type.function.pun" },
+        "2": { "name": "entity.name.function.pun" }
+      }
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.pun", "match": "\\b(je|nahi_ta|jad_tak|har_ik|vich|wapas)\\b" },
+        { "name": "storage.type.function.pun", "match": "\\bkaam\\b" },
+        { "name": "support.function.construct.output.pun", "match": "\\bdasso\\b" },
+        { "name": "keyword.other.reserved.pun", "match": "\\bnava\\b" }
+      ]
+    },
+    "constants": {
+      "name": "constant.language.pun",
+      "match": "\\b(sach|jhooth|khali)\\b"
+    },
+    "builtins": {
+      "patterns": [
+        { "name": "variable.language.pun", "match": "\\b(mang|jawab)\\b" },
+        { "name": "support.class.builtin.pun", "match": "\\b(shabdkosh|soochi|jatha|bhandar)\\b" }
+      ]
+    },
+    "member-access": {
+      "patterns": [
+        {
+          "match": "(\\.)\\s*(ginti|hai|jodo|hatao|saaf|pehla|akhri|chaabiyan|mull|taiyar|band|ik|saare|chalao|badle)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "punctuation.accessor.pun" },
+            "2": { "name": "support.function.pun" }
+          }
+        },
+        {
+          "match": "(\\.)\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "punctuation.accessor.pun" },
+            "2": { "name": "entity.name.function.member.pun" }
+          }
+        },
+        {
+          "match": "(\\.)\\s*([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "punctuation.accessor.pun" },
+            "2": { "name": "variable.other.property.pun" }
+          }
+        }
+      ]
+    },
+    "function-call": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+      "captures": {
+        "1": { "name": "entity.name.function.pun" }
+      }
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.comparison.pun", "match": "==|!=|>=|<=|>|<" },
+        { "name": "keyword.operator.logical.pun", "match": "&&|\\|\\||!" },
+        { "name": "keyword.operator.assignment.pun", "match": "=" },
+        { "name": "keyword.operator.arithmetic.pun", "match": "[-+*/%]" }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        { "name": "punctuation.separator.comma.pun", "match": "," },
+        { "name": "punctuation.separator.key-value.pun", "match": ":" },
+        { "name": "punctuation.terminator.statement.pun", "match": ";" }
+      ]
+    },
+    "variables": {
+      "name": "variable.other.pun",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+    }
+  }
+}

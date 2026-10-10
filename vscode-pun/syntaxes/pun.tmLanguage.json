@@ -1,0 +1,32 @@
+{
+  "name": "Pun",
+  "scopeName": "text.html.pun",
+  "fileTypes": ["pun"],
+  "patterns": [
+    { "include": "text.html.basic" }
+  ],
+  "injections": {
+    "L:text.html.pun - meta.embedded.block.pun": {
+      "patterns": [
+        { "include": "#pun-block" }
+      ]
+    }
+  },
+  "repository": {
+    "pun-block": {
+      "name": "meta.embedded.block.pun",
+      "begin": "<\\?pun\\b",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.embedded.begin.pun" }
+      },
+      "end": "\\?>",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.embedded.end.pun" }
+      },
+      "contentName": "source.pun",
+      "patterns": [
+        { "include": "source.pun" }
+      ]
+    }
+  }
+}
