@@ -1,0 +1,99 @@
+<?pun
+/*
+  errors.pun: what happens when something goes wrong.
+
+  ?kind=runtime, ?kind=type and ?kind=index each stop this page with Pun's
+  development error page (HTTP 500), which names the file, line and message.
+  A syntax error would break this page for every visitor, so it is only
+  described here, not triggered.
+*/
+
+kind = mang.GET["kind"]
+
+je kind == "runtime" {
+    dasso koi_variable_nahi        // Variable 'koi_variable_nahi' does not exist.
+}
+je kind == "type" {
+    dasso 5 < "panj"               // Expected number but found string.
+}
+je kind == "index" {
+    dishes = soochi("Dal", "Roti")
+    dasso dishes[5]                // List index is out of range.
+}
+
+// The links below, as a soochi of [href, label, what you'll see].
+links = soochi(
+    soochi("errors.pun?kind=runtime", "?kind=runtime", "500 error page: a variable that doesn't exist"),
+    soochi("errors.pun?kind=type", "?kind=type", "500 error page: comparing a number with text"),
+    soochi("errors.pun?kind=index", "?kind=index", "500 error page: a list index that is out of range"),
+    soochi("no-such-page.pun", "no-such-page.pun", "404 page from Pun Server"),
+    soochi("backend.pun?action=nope", "backend.pun?action=nope", "400 JSON: unknown action"),
+    soochi("backend.pun?action=order", "backend.pun?action=order", "405 JSON: order needs POST"),
+    soochi("backend.pun?action=stats&amp;tick=abc", "backend.pun?action=stats&amp;tick=abc", "422 JSON: tick isn't a number"),
+    soochi("members.pun", "members.pun", "500 error page when MySQL can't be reached (\"Pun Database Error\"), or 404 before you've created it")
+)
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pun Errors Demo</title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.pun">Pind Dhaba<span>.</span></a>
+        <nav aria-label="Sample site">
+            <a href="index.pun">Home</a>
+            <a href="dashboard.pun">Dashboard</a>
+            <a href="features.pun">Feature tour</a>
+            <a href="errors.pun" aria-current="page">Errors</a>
+            <a href="/">Pun home</a>
+        </nav>
+    </div>
+</header>
+
+<main class="wrap">
+    <span class="eyebrow">errors.pun</span>
+    <h1>When things go wrong</h1>
+    <p class="intro muted">A Pun error stops the page and Pun Server sends a development error page instead, with the file, line and message, but never a Java stack trace. Your own pages choose their status codes with <code>jawab.status</code>, as <code>backend.pun</code> does.</p>
+
+    <table>
+        <thead><tr><th>Open</th><th>What you'll see</th></tr></thead>
+        <tbody>
+<?pun
+har_ik link vich links {
+    dasso "            <tr><td><a href=\"" + link[0] + "\"><code>" + link[1] + "</code></a></td><td>" + link[2] + "</td></tr>\n"
+}
+?>
+        </tbody>
+    </table>
+
+    <h2 style="margin-top: 28px">The code that fails</h2>
+<pre class="code">kind = mang.GET["kind"]
+
+je kind == "runtime" {
+    dasso koi_variable_nahi        // Variable 'koi_variable_nahi' does not exist.
+}
+je kind == "type" {
+    dasso 5 &lt; "panj"               // Expected number but found string.
+}
+je kind == "index" {
+    dishes = soochi("Dal", "Roti")
+    dasso dishes[5]                // List index is out of range.
+}</pre>
+    <p class="muted">A syntax error, like a missing <code>}</code> or a single-quoted string, stops the page before any of it runs.</p>
+</main>
+
+<footer>
+    <div class="wrap">Rendered by Pun Server for <code><?pun dasso mang.method + " " + mang.path ?></code></div>
+</footer>
+
+<script src="assets/highlight.js"></script>
+</body>
+</html>

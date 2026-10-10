@@ -1,0 +1,230 @@
+<?pun
+/*
+  members.example.pun: talking to MySQL from Pun.
+
+  Setup
+    1. Copy this file to members.pun in the same folder. members.pun is
+       git-ignored, so your database details never reach GitHub.
+    2. Fill in the DB_ values below (keep a copy in the repo-root .env too).
+       Pun can't read .env or environment variables yet, so the details have
+       to sit in the .pun file that uses them.
+    3. Open dashboard.pun. Its Members panel calls members.pun.
+
+  Careful: on Windows, Pun Server sends the raw source of a .pun file when the
+  URL changes the extension's case (members.PUN) or adds a trailing dot. Only
+  put a real password here on a server nobody else can reach, until that is
+  fixed in Pun Server.
+
+  The table has two columns and is created by the first request:
+
+    CREATE TABLE IF NOT EXISTS pun_members (
+        naam  VARCHAR(100) NOT NULL,
+        email VARCHAR(190) NOT NULL PRIMARY KEY
+    )
+
+  API (every reply is JSON and includes the current list):
+
+    GET  members.pun                                  list everyone
+    POST members.pun  action=add&naam=...&email=...    add one
+    POST members.pun  action=update&email=...&naam=... change the name for an email
+    POST members.pun  action=delete&email=...          remove one
+
+  Shows: bhandar / jodo / taiyar / band, prepared statements with mull,
+  ik() for one row, saare() for all rows, chalao() and badle() for changes,
+  and letting MySQL build the JSON (JSON_OBJECT), because Pun can't escape
+  text yet.
+*/
+
+jawab.type = "application/json; charset=UTF-8"
+
+// ------------------------------------------------------- connection details
+
+DB_HOST = "localhost"
+DB_PORT = 3306
+DB_NAME = "pun_sample"
+DB_USER = "pun_user"
+DB_PASS = "change-me"
+
+// ------------------------------------------------------- JSON helpers
+
+// j_text adds quotes but doesn't escape: only use it for text written in this
+// file. Text from the database comes back as JSON already (see members_json).
+kaam j_text(text) {
+    wapas "\"" + text + "\""
+}
+
+kaam j_pair(key, value) {
+    wapas j_text(key) + ": " + value
+}
+
+kaam jod_ke(items, sep) {
+    joined = ""
+    shuru = sach
+    har_ik item vich items {
+        je shuru {
+            joined = "" + item
+            shuru = jhooth
+        }
+        nahi_ta {
+            joined = joined + sep + item
+        }
+    }
+    wapas joined
+}
+
+kaam j_object(pairs) {
+    wapas "{" + jod_ke(pairs, ", ") + "}"
+}
+
+kaam j_list(items) {
+    wapas "[" + jod_ke(items, ", ") + "]"
+}
+
+kaam galti(code, message) {
+    jawab.status = code
+    dasso j_object(soochi(
+        j_pair("ok", "false"),
+        j_pair("status", code),
+        j_pair("errors", j_list(soochi(j_text(message))))
+    ))
+}
+
+// A form field left empty arrives as "", one not sent at all as khali.
+kaam khali_hai(text) {
+    wapas text == khali || text == ""
+}
+
+// ------------------------------------------------------- connect
+
+// bhandar() only describes the connection; jodo() opens it.
+db = bhandar("mysql", DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS)
+db.jodo()
+
+// Create the table the first time. IF NOT EXISTS makes this safe to run on
+// every request.
+create_table = db.taiyar(
+    "CREATE TABLE IF NOT EXISTS pun_members ("
+    + "naam VARCHAR(100) NOT NULL, "
+    + "email VARCHAR(190) NOT NULL PRIMARY KEY)"
+)
+create_table.chalao()
+
+// ------------------------------------------------------- reading
+
+// saare() returns every row as a soochi of shabdkosh. JSON_OBJECT makes
+// MySQL turn each row into JSON text, so a name with a quote in it can't
+// break the reply.
+kaam members_json() {
+    rows_stmt = db.taiyar(
+        "SELECT JSON_OBJECT('naam', naam, 'email', email) AS member "
+        + "FROM pun_members ORDER BY naam"
+    )
+    items = soochi()
+    har_ik row vich rows_stmt.saare() {
+        items.jodo(row["member"])
+    }
+    wapas j_list(items)
+}
+
+// ------------------------------------------------------- writing
+//
+// Each action returns the number of rows it changed, or khali after it has
+// sent an error reply. Values are always bound with mull(), never joined into
+// the SQL text, so nothing a visitor types can change the query.
+
+kaam add_member() {
+    naam = mang.POST["naam"]
+    email = mang.POST["email"]
+    je khali_hai(naam) || khali_hai(email) {
+        galti(422, "Enter a name and an email.")
+        wapas khali
+    }
+
+    // ik() returns one row as a shabdkosh, or khali when there is none.
+    check = db.taiyar("SELECT COUNT(*) AS n FROM pun_members WHERE email = ?")
+    check.mull(1, email)
+    je check.ik()["n"] > 0 {
+        galti(409, "That email is already on the list.")
+        wapas khali
+    }
+
+    insert = db.taiyar("INSERT INTO pun_members (naam, email) VALUES (?, ?)")
+    insert.mull(1, naam)
+    insert.mull(2, email)
+    insert.chalao()
+    wapas insert.badle()
+}
+
+kaam update_member() {
+    naam = mang.POST["naam"]
+    email = mang.POST["email"]
+    je khali_hai(naam) || khali_hai(email) {
+        galti(422, "Enter the email to change and the new name.")
+        wapas khali
+    }
+
+    change = db.taiyar("UPDATE pun_members SET naam = ? WHERE email = ?")
+    change.mull(1, naam)
+    change.mull(2, email)
+    change.chalao()
+    je change.badle() == 0 {
+        galti(404, "Nobody on the list has that email.")
+        wapas khali
+    }
+    wapas change.badle()
+}
+
+kaam delete_member() {
+    email = mang.POST["email"]
+    je khali_hai(email) {
+        galti(422, "Say which email to delete.")
+        wapas khali
+    }
+
+    remove = db.taiyar("DELETE FROM pun_members WHERE email = ?")
+    remove.mull(1, email)
+    remove.chalao()
+    je remove.badle() == 0 {
+        galti(404, "Nobody on the list has that email.")
+        wapas khali
+    }
+    wapas remove.badle()
+}
+
+// ------------------------------------------------------- routing
+
+kaam reply(action, changed) {
+    dasso j_object(soochi(
+        j_pair("ok", "true"),
+        j_pair("action", j_text(action)),
+        j_pair("changed", changed),
+        j_pair("members", members_json())
+    ))
+}
+
+routes = shabdkosh(
+    "add": add_member,
+    "update": update_member,
+    "delete": delete_member
+)
+
+je mang.method == "GET" {
+    reply("list", 0)
+}
+nahi_ta {
+    action = mang.POST["action"]
+    je action != khali && routes.hai(action) {
+        changed = routes[action]()
+        je changed != khali {
+            reply(action, changed)
+        }
+    }
+    nahi_ta {
+        galti(400, "POST action=add, action=update or action=delete.")
+    }
+}
+
+// Close the connection when the page is done. (If a statement fails, Pun
+// stops the page before this line, so keep requests short.)
+db.band()
+?>

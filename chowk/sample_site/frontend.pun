@@ -1,0 +1,155 @@
+<?pun
+/*
+  frontend.pun: the dashboard's widgets, as an HTML fragment (no <html> or
+  <body>). dashboard.pun fetches this file and puts it on the page, because
+  Pun has no server-side include yet. Open it on its own to see exactly what
+  it sends.
+
+  Shows: a soochi of shabdkosh rendered with har_ik, jad_tak loops building
+  <option> lists, a helper kaam, je / nahi_ta, mang.GET, and several blocks
+  sharing one page scope. The Members panel talks to members.pun (MySQL).
+*/
+
+// One stat card per entry. assets/app.js fills in the numbers by data-stat.
+cards = soochi(
+    shabdkosh("stat": "orders",   "label": "Orders today",  "hint": "since opening"),
+    shabdkosh("stat": "revenue",  "label": "Revenue",       "hint": "before GST"),
+    shabdkosh("stat": "queue",    "label": "Kitchen queue", "hint": "orders waiting"),
+    shabdkosh("stat": "wait_min", "label": "Average wait",  "hint": "minutes")
+)
+
+TABLES = 8
+MAX_QTY = 10
+
+// dashboard.pun asks for frontend.pun?from=dashboard. The value is only
+// compared, never printed, so it's safe to read without escaping.
+embedded = mang.GET["from"] == "dashboard"
+
+kaam option(value, label) {
+    wapas "<option value=\"" + value + "\">" + label + "</option>"
+}
+?>
+<?pun
+je !embedded {
+    dasso "<p class=\"note\">This is <code>frontend.pun</code> on its own: an HTML fragment with no styles or scripts. "
+    dasso "<a href=\"dashboard.pun\">Open the dashboard</a> to see it in place.</p>\n"
+}
+?>
+<section class="cards" aria-label="Live numbers">
+<?pun
+har_ik card vich cards {
+    dasso "    <article class=\"card\" data-stat=\"" + card["stat"] + "\">"
+    dasso "<h3>" + card["label"] + "</h3>"
+    dasso "<p class=\"value\">&ndash;</p>"
+    dasso "<p class=\"hint\">" + card["hint"] + "</p></article>\n"
+}
+?>
+</section>
+
+<section class="panels">
+    <article class="panel">
+        <header>
+            <h2>Kitchen</h2>
+            <span class="badge" id="status-badge">connecting&hellip;</span>
+        </header>
+        <p class="muted">Queue length over the last 12 updates</p>
+        <div class="spark" id="spark" role="img" aria-label="Queue history"></div>
+        <p class="top">Most ordered: <strong id="top-dish">&ndash;</strong></p>
+        <h3>Latest orders</h3>
+        <ol class="feed" id="feed"></ol>
+        <div class="controls">
+            <button type="button" id="pause">Pause updates</button>
+            <span class="muted" id="updated"></span>
+        </div>
+    </article>
+
+    <article class="panel">
+        <header>
+            <h2>Menu</h2>
+            <span class="muted" id="gst-note"></span>
+        </header>
+        <table>
+            <thead><tr><th>Dish</th><th class="num">Price</th></tr></thead>
+            <tbody id="menu-rows">
+                <tr><td colspan="2" class="muted">Loading from backend.pun&hellip;</td></tr>
+            </tbody>
+        </table>
+    </article>
+
+    <article class="panel">
+        <header><h2>New order</h2></header>
+        <form id="order-form" class="order" method="POST" action="backend.pun">
+            <input type="hidden" name="action" value="order">
+            <label>Dish
+                <select name="dish" id="dish-select" required>
+                    <option value="">Loading&hellip;</option>
+                </select>
+            </label>
+            <label>Quantity
+                <select name="qty">
+<?pun
+q = 1
+jad_tak q <= MAX_QTY {
+    dasso "                    " + option(q, q) + "\n"
+    q = q + 1
+}
+?>
+                </select>
+            </label>
+            <label>Table
+                <select name="table">
+<?pun
+mez = 1
+jad_tak mez <= TABLES {
+    dasso "                    " + option(mez, "Table " + mez) + "\n"
+    mez = mez + 1
+}
+?>
+                </select>
+            </label>
+            <div class="actions">
+                <button type="submit" class="primary">Add to bill</button>
+                <button type="button" id="bad-order" title="Posts dish=pizza, qty=0, table=99">Send a bad order</button>
+            </div>
+        </form>
+        <ul class="errors" id="order-errors"></ul>
+        <table>
+            <thead><tr><th>Dish</th><th class="num">Qty</th><th class="num">Table</th><th class="num">Total</th></tr></thead>
+            <tbody id="bill-rows"></tbody>
+            <tfoot><tr><th colspan="3">Bill incl. GST</th><th class="num" id="bill-total">&ndash;</th></tr></tfoot>
+        </table>
+    </article>
+
+    <article class="panel">
+        <header>
+            <h2>Members</h2>
+            <span class="badge" id="db-badge">MySQL</span>
+        </header>
+        <p class="muted">Saved in MySQL by <code>members.pun</code>, in a two-column table (<code>naam</code>, <code>email</code>) it creates on first use. Add someone, change the name for an email, or delete a row.</p>
+        <form id="member-form" class="simple" method="POST" action="members.pun">
+            <label>Name <input type="text" name="naam" maxlength="100" autocomplete="name"></label>
+            <label>Email <input type="email" name="email" maxlength="190" autocomplete="email"></label>
+            <div class="actions">
+                <button type="submit" name="action" value="add" class="primary">Add</button>
+                <button type="submit" name="action" value="update">Update name</button>
+            </div>
+        </form>
+        <ul class="errors" id="member-errors"></ul>
+        <p class="muted" id="db-status">Loading from members.pun&hellip;</p>
+        <ol class="feed" id="members"></ol>
+    </article>
+
+    <article class="panel wide">
+        <header><h2>Replies from the server</h2></header>
+        <p class="muted">The latest reply from <code>backend.pun</code> and <code>members.pun</code> for each action, exactly as the server sent it.</p>
+        <div class="replies">
+<?pun
+har_ik action vich soochi("stats", "menu", "order", "members") {
+    dasso "            <section class=\"reply\" data-action=\"" + action + "\">"
+    dasso "<h3><span class=\"badge\">" + action + "</span> <code>no request yet</code></h3>"
+    dasso "<pre>&ndash;</pre></section>\n"
+}
+?>
+        </div>
+    </article>
+</section>

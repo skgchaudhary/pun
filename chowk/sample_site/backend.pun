@@ -1,0 +1,315 @@
+<?pun
+/*
+  backend.pun: the JSON API behind dashboard.pun.
+
+    GET  backend.pun?action=menu               the menu, prices and GST rate
+    GET  backend.pun?action=stats&tick=N       live kitchen numbers (N = 0..999)
+    POST backend.pun  action=order&dish=dal&qty=2&table=5
+                                               one priced line for the bill
+
+  The Members panel (name and email in MySQL) talks to members.pun instead.
+
+  The live kitchen numbers are simulated so this file works without a
+  database. Each tick seeds a small pseudo-random generator: the same tick
+  always gives the same numbers, and the browser asks for the next tick every
+  few seconds.
+
+  Shows: jawab.type and jawab.status, mang.method, mang.GET, mang.POST,
+  shabdkosh and soochi, functions kept in a shabdkosh and called by name,
+  jad_tak and har_ik loops, and building JSON text by hand.
+*/
+
+jawab.type = "application/json; charset=UTF-8"
+
+// ---------------------------------------------------------------- data
+
+menu = shabdkosh(
+    "saag":    shabdkosh("naam": "Sarson da Saag",   "price": 220, "veg": sach),
+    "makki":   shabdkosh("naam": "Makki di Roti",    "price": 40,  "veg": sach),
+    "dal":     shabdkosh("naam": "Dal Makhani",      "price": 240, "veg": sach),
+    "chole":   shabdkosh("naam": "Chole Bhature",    "price": 180, "veg": sach),
+    "kulcha":  shabdkosh("naam": "Amritsari Kulcha", "price": 160, "veg": sach),
+    "paneer":  shabdkosh("naam": "Paneer Tikka",     "price": 260, "veg": sach),
+    "chicken": shabdkosh("naam": "Butter Chicken",   "price": 340, "veg": jhooth),
+    "lassi":   shabdkosh("naam": "Lassi",            "price": 90,  "veg": sach)
+)
+
+GST_PERCENT = 5
+TABLES = 8
+MAX_QTY = 10
+MAX_TICK = 999
+
+// ---------------------------------------------------------------- helpers
+//
+// Scope rule to keep in mind: inside a function, assigning to a name that
+// already exists at page level changes the page variable. New names stay
+// local. The helpers below only use names the page itself never assigns.
+
+// Pun can't turn text into a number yet ("5" stays text), so look the text
+// up in a table of "0".."uppar". Anything else gives khali.
+kaam ank(text, uppar) {
+    je text == khali {
+        wapas khali
+    }
+    lookup = shabdkosh()
+    n = 0
+    jad_tak n <= uppar {
+        lookup["" + n] = n
+        n = n + 1
+    }
+    wapas lookup[text]
+}
+
+// x % 1 is the part after the decimal point.
+kaam poora(x) {
+    wapas x - x % 1
+}
+
+kaam gol2(x) {
+    wapas poora(x * 100 + 0.5) / 100
+}
+
+// Next number from a tiny pseudo-random generator (the ZX81 one).
+kaam agla(seed) {
+    wapas (seed * 75 + 74) % 65537
+}
+
+// Kitchen queue (0..12 orders) at a given tick: a rush that builds and
+// clears every 24 ticks, plus some noise. It depends only on the tick, so
+// the history chart shifts along smoothly from one update to the next.
+kaam queue_at(t) {
+    phase = t % 24
+    je phase > 12 {
+        phase = 24 - phase
+    }
+    noise = agla((t * t * 31 + t * 7919 + 17) % 65537) % 4
+    wapas poora(phase * 0.75) + noise
+}
+
+// JSON by hand: Pun has no JSON library yet. j_text adds quotes but does not
+// escape, so only pass it text written in this file, never request values.
+kaam j_text(text) {
+    wapas "\"" + text + "\""
+}
+
+kaam j_bool(value) {
+    je value {
+        wapas "true"
+    }
+    wapas "false"
+}
+
+kaam j_pair(key, value) {
+    wapas j_text(key) + ": " + value
+}
+
+kaam jod_ke(items, sep) {
+    joined = ""
+    shuru = sach
+    har_ik item vich items {
+        je shuru {
+            joined = "" + item
+            shuru = jhooth
+        }
+        nahi_ta {
+            joined = joined + sep + item
+        }
+    }
+    wapas joined
+}
+
+kaam j_object(pairs) {
+    wapas "{" + jod_ke(pairs, ", ") + "}"
+}
+
+kaam j_list(items) {
+    wapas "[" + jod_ke(items, ", ") + "]"
+}
+
+// Error reply: sets the HTTP status and lists every message.
+kaam galti(code, messages) {
+    jawab.status = code
+    quoted = soochi()
+    har_ik message vich messages {
+        quoted.jodo(j_text(message))
+    }
+    dasso j_object(soochi(
+        j_pair("ok", "false"),
+        j_pair("status", code),
+        j_pair("errors", j_list(quoted))
+    ))
+}
+
+// ---------------------------------------------------------------- actions
+
+// GET ?action=menu
+kaam menu_dikhao() {
+    je mang.method != "GET" {
+        galti(405, soochi("menu only answers GET."))
+        wapas khali
+    }
+    dishes = soochi()
+    har_ik id, dish vich menu {
+        dishes.jodo(j_object(soochi(
+            j_pair("id", j_text(id)),
+            j_pair("naam", j_text(dish["naam"])),
+            j_pair("price", dish["price"]),
+            j_pair("veg", j_bool(dish["veg"]))
+        )))
+    }
+    dasso j_object(soochi(
+        j_pair("ok", "true"),
+        j_pair("gst_percent", GST_PERCENT),
+        j_pair("tables", TABLES),
+        j_pair("max_qty", MAX_QTY),
+        j_pair("dishes", j_list(dishes))
+    ))
+}
+
+// GET ?action=stats&tick=N
+kaam stats_dikhao() {
+    je mang.method != "GET" {
+        galti(405, soochi("stats only answers GET."))
+        wapas khali
+    }
+    tick = ank(mang.GET["tick"], MAX_TICK)
+    je tick == khali {
+        galti(422, soochi("tick must be a whole number from 0 to " + MAX_TICK + "."))
+        wapas khali
+    }
+
+    queue = queue_at(tick)
+    seed = agla(tick + 101)
+    orders = 40 + tick * 3 + seed % 4
+    seed = agla(seed)
+    revenue = orders * 310 + (seed % 50) * 10
+    seed = agla(seed)
+    wait_min = 6 + queue * 2 + seed % 3
+
+    // Pun has no "else if": put a je inside nahi_ta. The variable is set
+    // before the blocks, because a variable first created inside a block
+    // ends with that block.
+    status = "calm"
+    je queue >= 9 {
+        status = "rush"
+    }
+    nahi_ta {
+        je queue >= 5 {
+            status = "busy"
+        }
+    }
+
+    // The newest order: a random dish, table and quantity.
+    ids = menu.chaabiyan()
+    seed = agla(seed)
+    latest_id = ids[seed % ids.ginti()]
+    seed = agla(seed)
+    latest_table = 1 + seed % TABLES
+    seed = agla(seed)
+    latest_qty = 1 + seed % 3
+
+    // The most ordered dish changes every 10 ticks.
+    top_id = ids[poora(tick / 10) % ids.ginti()]
+
+    // Queue length for the last 12 ticks, oldest first.
+    history = soochi()
+    t = tick - 11
+    jad_tak t <= tick {
+        je t >= 0 {
+            history.jodo(queue_at(t))
+        }
+        nahi_ta {
+            history.jodo(0)
+        }
+        t = t + 1
+    }
+
+    dasso j_object(soochi(
+        j_pair("ok", "true"),
+        j_pair("tick", tick),
+        j_pair("status", j_text(status)),
+        j_pair("orders", orders),
+        j_pair("revenue", revenue),
+        j_pair("queue", queue),
+        j_pair("wait_min", wait_min),
+        j_pair("top_dish", j_text(menu[top_id]["naam"])),
+        j_pair("queue_history", j_list(history)),
+        j_pair("latest", j_object(soochi(
+            j_pair("dish", j_text(menu[latest_id]["naam"])),
+            j_pair("table", latest_table),
+            j_pair("qty", latest_qty)
+        )))
+    ))
+}
+
+// POST action=order&dish=dal&qty=2&table=5
+kaam order_lao() {
+    je mang.method != "POST" {
+        galti(405, soochi("order only answers POST."))
+        wapas khali
+    }
+    dish_id = mang.POST["dish"]
+    qty = ank(mang.POST["qty"], MAX_QTY)
+    table = ank(mang.POST["table"], TABLES)
+
+    // Check every field and report all problems at once. dish_id == khali
+    // comes first because menu.hai(khali) is an error, and || stops as soon
+    // as one side is true.
+    errors = soochi()
+    je dish_id == khali || !menu.hai(dish_id) {
+        errors.jodo("Pick a dish from the menu.")
+    }
+    je qty == khali || qty < 1 {
+        errors.jodo("Quantity must be from 1 to " + MAX_QTY + ".")
+    }
+    je table == khali || table < 1 {
+        errors.jodo("Table must be from 1 to " + TABLES + ".")
+    }
+    je errors.ginti() > 0 {
+        galti(422, errors)
+        wapas khali
+    }
+
+    dish = menu[dish_id]
+    subtotal = dish["price"] * qty
+    gst = gol2(subtotal * GST_PERCENT / 100)
+    dasso j_object(soochi(
+        j_pair("ok", "true"),
+        j_pair("dish", j_text(dish["naam"])),
+        j_pair("veg", j_bool(dish["veg"])),
+        j_pair("qty", qty),
+        j_pair("table", table),
+        j_pair("price", dish["price"]),
+        j_pair("subtotal", subtotal),
+        j_pair("gst", gst),
+        j_pair("total", gol2(subtotal + gst))
+    ))
+}
+
+// ---------------------------------------------------------------- routing
+
+// Functions are values, so this table maps each action to its function.
+routes = shabdkosh(
+    "menu": menu_dikhao,
+    "stats": stats_dikhao,
+    "order": order_lao
+)
+
+// GET requests name the action in the query string, POST requests in the body.
+action = mang.GET["action"]
+je mang.method == "POST" {
+    action = mang.POST["action"]
+}
+
+je action == khali {
+    galti(400, soochi("Say what you need: ?action=menu, ?action=stats&tick=0, or POST action=order."))
+}
+nahi_ta {
+    je routes.hai(action) {
+        routes[action]()
+    }
+    nahi_ta {
+        galti(400, soochi("Unknown action. Use menu, stats or order."))
+    }
+}
+?>

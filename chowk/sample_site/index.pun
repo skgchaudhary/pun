@@ -1,7 +1,126 @@
 <?pun
-	kaam add(a, b) {
-		wapas a + b;
-	}
-	dasso "sat sri akaal<br>";
-	dasso add(2, 3);
+/*
+  index.pun: home page of the sample site, served for /sample_site/.
+  The page cards are a soochi of shabdkosh values rendered with har_ik
+  and a helper kaam.
+*/
+
+pages = soochi(
+    shabdkosh(
+        "href": "dashboard.pun",
+        "title": "Live dashboard",
+        "files": "dashboard.pun + frontend.pun + backend.pun + assets/app.js",
+        "text": "The kitchen screen of a small dhaba. It loads frontend.pun for its widgets, polls backend.pun every 3 seconds for live JSON and posts orders to it. Its Members panel keeps names and emails in MySQL."
+    ),
+    shabdkosh(
+        "href": "members.pun",
+        "title": "MySQL members API",
+        "files": "members.example.pun (copy to members.pun)",
+        "text": "Connects with bhandar(), creates a two-column table (naam, email), then lists, adds, updates and deletes rows with prepared statements. Copy the example and add your database details first."
+    ),
+    shabdkosh(
+        "href": "features.pun",
+        "title": "Feature tour",
+        "files": "features.pun",
+        "text": "Every language feature with its code next to the live output: values, operators, je, loops, functions, scope, soochi, shabdkosh, jatha, mang and a print_r helper."
+    ),
+    shabdkosh(
+        "href": "errors.pun",
+        "title": "Errors and status codes",
+        "files": "errors.pun",
+        "text": "Trigger Pun's development error page, see a 404, and get the 400, 405 and 422 JSON replies from backend.pun."
+    ),
+    shabdkosh(
+        "href": "backend.pun?action=menu",
+        "title": "The JSON API",
+        "files": "backend.pun",
+        "text": "Open the API the dashboard uses: the menu, live stats for a tick, orders and sign-ups, each with its own status codes."
+    )
+)
+
+kaam page_card(page) {
+    wapas "<a class=\"page-card\" href=\"" + page["href"] + "\">"
+        + "<h2>" + page["title"] + "</h2>"
+        + "<span class=\"files\">" + page["files"] + "</span>"
+        + "<p>" + page["text"] + "</p></a>\n"
+}
 ?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pind Dhaba Sample</title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.pun">Pind Dhaba<span>.</span></a>
+        <nav aria-label="Sample site">
+            <a href="index.pun" aria-current="page">Home</a>
+            <a href="dashboard.pun">Dashboard</a>
+            <a href="features.pun">Feature tour</a>
+            <a href="errors.pun">Errors</a>
+            <a href="/">Pun home</a>
+        </nav>
+    </div>
+</header>
+
+<main class="wrap">
+    <span class="eyebrow">Pun sample site</span>
+    <h1>Pind Dhaba: a small app written in Pun</h1>
+    <p class="intro muted">A restaurant dashboard plus a tour of the language. Every page here is a <code>.pun</code> file in <code>chowk/sample_site/</code>. Read the source next to the running page: each file starts with a comment that says what it shows.</p>
+
+    <div class="pages">
+<?pun
+har_ik page vich pages {
+    dasso page_card(page)
+}
+?>
+    </div>
+
+    <h2>How the dashboard fits together</h2>
+    <ol class="flow">
+        <li>The browser asks for <code>dashboard.pun</code>. Pun renders the page shell: the header and the staff picker, from a <code>shabdkosh</code> whitelist.</li>
+        <li><code>assets/app.js</code> fetches <code>frontend.pun?from=dashboard</code> and puts it into the page. Pun has no server-side include yet, so the include happens in the browser.</li>
+        <li><code>app.js</code> gets <code>backend.pun?action=menu</code>, then <code>backend.pun?action=stats&amp;tick=N</code> every 3 seconds, and posts <code>action=order</code> as ordinary form data.</li>
+        <li><code>backend.pun</code> reads <code>mang.GET</code> / <code>mang.POST</code>, picks a handler from a <code>shabdkosh</code> of functions, and replies with JSON and a status code through <code>jawab</code>.</li>
+        <li>The Members panel calls <code>members.pun</code>, which opens MySQL with <code>bhandar()</code>, creates the <code>pun_members</code> table if needed, and runs prepared statements for list, add, update and delete.</li>
+    </ol>
+
+    <h2>Connecting to MySQL</h2>
+    <ol class="flow">
+        <li>Copy <code>.env.example</code> to <code>.env</code> in the repo root and fill in your database details. Keep it there: Pun Server serves every file inside <code>chowk/</code>, so a <code>.env</code> in there could be downloaded.</li>
+        <li>Copy <code>members.example.pun</code> to <code>members.pun</code> and put the same details in its <code>DB_</code> lines. Pun can't read <code>.env</code> yet. Both copies are git-ignored.</li>
+        <li>Use a MySQL that Pun Server can reach, such as a local one. Free hosts like InfinityFree only accept connections from their own PHP hosting.</li>
+        <li>Until Pun Server stops sending the raw source of <code>members.PUN</code> (a different letter case) on Windows, only keep a real password in <code>members.pun</code> on a server nobody else can reach.</li>
+    </ol>
+
+    <h2>Workarounds you'll see in the code</h2>
+    <ul class="flow">
+        <li><strong>No includes:</strong> the dashboard fetches <code>frontend.pun</code> from the browser.</li>
+        <li><strong>No JSON library:</strong> <code>backend.pun</code> builds JSON with small helpers (<code>j_text</code>, <code>j_pair</code>, <code>j_object</code>, <code>j_list</code>).</li>
+        <li><strong>No HTML or JSON escaping:</strong> request text is only compared or looked up, never printed. <code>members.pun</code> lets MySQL build its JSON with <code>JSON_OBJECT</code>. The browser shows values with <code>textContent</code>.</li>
+        <li><strong>No text-to-number conversion:</strong> <code>ank()</code> looks the text up in a table built with a loop.</li>
+        <li><strong>No sessions:</strong> the kitchen numbers are simulated from a tick that the browser counts up.</li>
+        <li><strong>No <code>.env</code> support:</strong> database details sit in the git-ignored <code>members.pun</code>.</li>
+        <li><strong>No <em>else if</em>:</strong> a <code>je</code> goes inside <code>nahi_ta</code>.</li>
+    </ul>
+
+    <h2>Run it</h2>
+<pre class="code"># from the pun folder
+java -jar target/pun-server.jar serve
+
+# then open http://localhost:8080/sample_site/</pre>
+</main>
+
+<footer>
+    <div class="wrap">Rendered by Pun Server for <code><?pun dasso mang.method + " " + mang.path ?></code></div>
+</footer>
+
+</body>
+</html>

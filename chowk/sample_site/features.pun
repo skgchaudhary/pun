@@ -1,0 +1,676 @@
+<?pun
+/*
+  features.pun: a tour of the Pun language. Each example shows its code on
+  the left, and on the right the output of running that same code while
+  this page was rendered. Every Pun block on this page shares one page
+  scope, so later examples can use variables from earlier ones.
+
+  The code is written twice: escaped for display in <pre class="code">, and
+  as real Pun in the output column. Keep the two copies the same.
+*/
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pun Feature Tour</title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.pun">Pind Dhaba<span>.</span></a>
+        <nav aria-label="Sample site">
+            <a href="index.pun">Home</a>
+            <a href="dashboard.pun">Dashboard</a>
+            <a href="features.pun" aria-current="page">Feature tour</a>
+            <a href="errors.pun">Errors</a>
+            <a href="/">Pun home</a>
+        </nav>
+    </div>
+</header>
+
+<main class="wrap">
+    <span class="eyebrow">features.pun</span>
+    <h1>Every Pun feature, running live</h1>
+    <p class="intro muted">The code on the left of each example is the code that produced the output on the right, on the server, for this request. Open <code>chowk/sample_site/features.pun</code> in your editor to read it in context.</p>
+
+    <ul class="toc">
+        <li><a href="#values">Values</a></li>
+        <li><a href="#operators">Operators</a></li>
+        <li><a href="#logic">True and false</a></li>
+        <li><a href="#je">je / nahi_ta</a></li>
+        <li><a href="#loops">jad_tak</a></li>
+        <li><a href="#functions">kaam / wapas</a></li>
+        <li><a href="#scope">Scope</a></li>
+        <li><a href="#soochi">soochi</a></li>
+        <li><a href="#shabdkosh">shabdkosh</a></li>
+        <li><a href="#jatha">jatha</a></li>
+        <li><a href="#nested">Nesting</a></li>
+        <li><a href="#numbers">Text to number</a></li>
+        <li><a href="#comments">Comments</a></li>
+        <li><a href="#mang">mang</a></li>
+        <li><a href="#debug">print_r</a></li>
+        <li><a href="#jawab">jawab</a></li>
+        <li><a href="#mysql">MySQL</a></li>
+        <li><a href="#files">Static files</a></li>
+    </ul>
+
+    <section class="demo" id="values">
+        <h2>Values and types</h2>
+        <p>No declaration keyword: just assign. Numbers, text, <code>sach</code> / <code>jhooth</code> and <code>khali</code> (null), which prints as nothing.</p>
+        <div class="demo-row">
+<pre class="code">naam = "Simran"
+umar = 29
+bill = 412.5
+khulla = sach
+note = khali
+
+dasso naam + " is " + umar + "\n"
+dasso "bill: " + bill + ", open: " + khulla + "\n"
+dasso "note: [" + note + "]"</pre>
+            <div class="out"><small>Output</small><pre><?pun
+naam = "Simran"
+umar = 29
+bill = 412.5
+khulla = sach
+note = khali
+
+dasso naam + " is " + umar + "\n"
+dasso "bill: " + bill + ", open: " + khulla + "\n"
+dasso "note: [" + note + "]"
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="operators">
+        <h2>Operators</h2>
+        <p><code>* / %</code> go before <code>+ -</code>. Division keeps decimals. <code>+</code> joins text, working left to right, so add brackets when you mean a sum.</p>
+        <div class="demo-row">
+<pre class="code">dasso 10 + 20 * 2 + "\n"         // * first
+dasso (10 + 20) * 2 + "\n"
+dasso 17 % 5 + "\n"              // remainder
+dasso 10 / 4 + "\n"
+dasso "Total: " + 10 + 20 + "\n" // joins text
+dasso "Total: " + (10 + 20)</pre>
+            <div class="out"><small>Output</small><pre><?pun
+dasso 10 + 20 * 2 + "\n"         // * first
+dasso (10 + 20) * 2 + "\n"
+dasso 17 % 5 + "\n"              // remainder
+dasso 10 / 4 + "\n"
+dasso "Total: " + 10 + 20 + "\n" // joins text
+dasso "Total: " + (10 + 20)
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="logic">
+        <h2>Comparisons, logic, true and false</h2>
+        <p><code>== != &gt; &lt; &gt;= &lt;=</code>, <code>&amp;&amp; || !</code>. In a condition, <code>0</code> and <code>khali</code> count as false, and text counts as true. <code>&lt;</code> and <code>&gt;</code> only work on numbers.</p>
+        <div class="demo-row">
+<pre class="code">dasso (7 &gt; 3 &amp;&amp; !jhooth) + "\n"
+dasso (5 == 5.0) + "\n"
+dasso ("dal" != "saag") + "\n"
+
+je "any text" { dasso "text is true\n" }
+je 0 { dasso "never" } nahi_ta { dasso "0 is false\n" }
+je khali { dasso "never" } nahi_ta { dasso "khali is false" }</pre>
+            <div class="out"><small>Output</small><pre><?pun
+dasso (7 > 3 && !jhooth) + "\n"
+dasso (5 == 5.0) + "\n"
+dasso ("dal" != "saag") + "\n"
+
+je "any text" { dasso "text is true\n" }
+je 0 { dasso "never" } nahi_ta { dasso "0 is false\n" }
+je khali { dasso "never" } nahi_ta { dasso "khali is false" }
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="je">
+        <h2><code>je</code> / <code>nahi_ta</code></h2>
+        <p>If and else. Pun has no <em>else if</em>: put a <code>je</code> inside <code>nahi_ta</code>.</p>
+        <div class="demo-row">
+<pre class="code">har_ik amount vich soochi(1250, 640, 180) {
+    dasso amount + ": "
+    je amount &gt;= 1000 {
+        dasso "free lassi!"
+    }
+    nahi_ta {
+        je amount &gt;= 500 {
+            dasso "10% off"
+        }
+        nahi_ta {
+            dasso "thank you"
+        }
+    }
+    dasso "\n"
+}</pre>
+            <div class="out"><small>Output</small><pre><?pun
+har_ik amount vich soochi(1250, 640, 180) {
+    dasso amount + ": "
+    je amount >= 1000 {
+        dasso "free lassi!"
+    }
+    nahi_ta {
+        je amount >= 500 {
+            dasso "10% off"
+        }
+        nahi_ta {
+            dasso "thank you"
+        }
+    }
+    dasso "\n"
+}
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="loops">
+        <h2><code>jad_tak</code> loops</h2>
+        <p>A while loop. Pun stops any loop that runs more than 1,000,000 times. <code>har_ik</code> loops over collections and is shown with each one below.</p>
+        <div class="demo-row">
+<pre class="code">i = 1
+jad_tak i &lt;= 5 {
+    dasso i + " "
+    i = i + 1
+}</pre>
+            <div class="out"><small>Output</small><pre><?pun
+i = 1
+jad_tak i <= 5 {
+    dasso i + " "
+    i = i + 1
+}
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="functions">
+        <h2><code>kaam</code> / <code>wapas</code></h2>
+        <p>Functions take parameters, return with <code>wapas</code>, can call themselves, and are values you can pass to other functions. Define a function before you call it.</p>
+        <div class="demo-row">
+<pre class="code">kaam jod(a, b) {
+    wapas a + b
+}
+
+kaam factorial(n) {
+    je n &lt;= 1 {
+        wapas 1
+    }
+    wapas n * factorial(n - 1)
+}
+
+kaam double(x) {
+    wapas x * 2
+}
+
+kaam do_vaar(f, x) {
+    wapas f(f(x))       // f is a function
+}
+
+dasso jod(10, 20) + "\n"
+dasso factorial(5) + "\n"
+dasso do_vaar(double, 3)</pre>
+            <div class="out"><small>Output</small><pre><?pun
+kaam jod(a, b) {
+    wapas a + b
+}
+
+kaam factorial(n) {
+    je n <= 1 {
+        wapas 1
+    }
+    wapas n * factorial(n - 1)
+}
+
+kaam double(x) {
+    wapas x * 2
+}
+
+kaam do_vaar(f, x) {
+    wapas f(f(x))       // f is a function
+}
+
+dasso jod(10, 20) + "\n"
+dasso factorial(5) + "\n"
+dasso do_vaar(double, 3)
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="scope">
+        <h2>Scope</h2>
+        <p>Inside a function, assigning to a name the page already has changes the page's variable, and a new name stays local. A variable first created inside a block is gone after the block, so create it before.</p>
+        <div class="demo-row">
+<pre class="code">served = 0
+
+kaam serve() {
+    served = served + 1   // page variable
+    plate = "local"       // new: stays inside
+}
+
+serve()
+serve()
+dasso "served " + served + "\n"
+
+result = "not set"
+je sach {
+    result = "kept"       // existed before the block
+    inside = "gone"       // new: ends with the block
+}
+dasso "result " + result</pre>
+            <div class="out"><small>Output</small><pre><?pun
+served = 0
+
+kaam serve() {
+    served = served + 1   // page variable
+    plate = "local"       // new: stays inside
+}
+
+serve()
+serve()
+dasso "served " + served + "\n"
+
+result = "not set"
+je sach {
+    result = "kept"       // existed before the block
+    inside = "gone"       // new: ends with the block
+}
+dasso "result " + result
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="soochi">
+        <h2><code>soochi</code>: lists</h2>
+        <p>An ordered list, indexed from 0. Methods: <code>jodo</code>, <code>hatao</code>, <code>ginti</code>, <code>hai</code>, <code>pehla</code>, <code>akhri</code>, <code>saaf</code>.</p>
+        <div class="demo-row">
+<pre class="code">dishes = soochi("Saag", "Dal", "Lassi")
+dishes.jodo("Kulcha")         // add to the end
+dishes.hatao("Dal")           // remove by value
+dishes[0] = "Sarson da Saag"  // change by index
+
+dasso dishes.ginti() + " dishes\n"
+dasso "first " + dishes.pehla() + ", last " + dishes.akhri() + "\n"
+dasso "[1] is " + dishes[1] + ", has Lassi? " + dishes.hai("Lassi") + "\n"
+har_ik dish vich dishes {
+    dasso "- " + dish + "\n"
+}
+dishes.saaf()                 // empty it
+dasso "after saaf: " + dishes.ginti()</pre>
+            <div class="out"><small>Output</small><pre><?pun
+dishes = soochi("Saag", "Dal", "Lassi")
+dishes.jodo("Kulcha")         // add to the end
+dishes.hatao("Dal")           // remove by value
+dishes[0] = "Sarson da Saag"  // change by index
+
+dasso dishes.ginti() + " dishes\n"
+dasso "first " + dishes.pehla() + ", last " + dishes.akhri() + "\n"
+dasso "[1] is " + dishes[1] + ", has Lassi? " + dishes.hai("Lassi") + "\n"
+har_ik dish vich dishes {
+    dasso "- " + dish + "\n"
+}
+dishes.saaf()                 // empty it
+dasso "after saaf: " + dishes.ginti()
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="shabdkosh">
+        <h2><code>shabdkosh</code>: maps</h2>
+        <p>Text keys to values, kept in the order you added them. A missing key gives <code>khali</code>. Methods: <code>ginti</code>, <code>hai</code>, <code>hatao</code>, <code>chaabiyan</code> (keys), <code>mull</code> (values), <code>saaf</code>.</p>
+        <div class="demo-row">
+<pre class="code">prices = shabdkosh("saag": 220, "dal": 240)
+prices["lassi"] = 90          // add or change
+prices.hatao("dal")           // remove a key
+
+dasso prices.ginti() + " items, saag is " + prices["saag"] + "\n"
+dasso "pizza: [" + prices["pizza"] + "]\n"
+dasso "has lassi? " + prices.hai("lassi") + "\n"
+
+har_ik dish, rupees vich prices {   // key and value
+    dasso dish + " = " + rupees + "\n"
+}
+
+total = 0
+har_ik rupees vich prices.mull() {
+    total = total + rupees
+}
+dasso "total " + total + " for " + prices.chaabiyan().ginti() + " keys"</pre>
+            <div class="out"><small>Output</small><pre><?pun
+prices = shabdkosh("saag": 220, "dal": 240)
+prices["lassi"] = 90          // add or change
+prices.hatao("dal")           // remove a key
+
+dasso prices.ginti() + " items, saag is " + prices["saag"] + "\n"
+dasso "pizza: [" + prices["pizza"] + "]\n"
+dasso "has lassi? " + prices.hai("lassi") + "\n"
+
+har_ik dish, rupees vich prices {   // key and value
+    dasso dish + " = " + rupees + "\n"
+}
+
+total = 0
+har_ik rupees vich prices.mull() {
+    total = total + rupees
+}
+dasso "total " + total + " for " + prices.chaabiyan().ginti() + " keys"
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="jatha">
+        <h2><code>jatha</code>: sets</h2>
+        <p>Each value at most once, in the order first added. Methods: <code>jodo</code>, <code>hatao</code>, <code>ginti</code>, <code>hai</code>, <code>saaf</code>.</p>
+        <div class="demo-row">
+<pre class="code">tags = jatha("veg", "spicy", "veg")   // duplicate dropped
+tags.jodo("punjabi")
+tags.jodo("veg")                      // already there
+tags.hatao("spicy")
+
+dasso tags.ginti() + " tags, veg? " + tags.hai("veg") + "\n"
+har_ik tag vich tags {
+    dasso tag + " "
+}</pre>
+            <div class="out"><small>Output</small><pre><?pun
+tags = jatha("veg", "spicy", "veg")   // duplicate dropped
+tags.jodo("punjabi")
+tags.jodo("veg")                      // already there
+tags.hatao("spicy")
+
+dasso tags.ginti() + " tags, veg? " + tags.hai("veg") + "\n"
+har_ik tag vich tags {
+    dasso tag + " "
+}
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="nested">
+        <h2>Collections inside collections</h2>
+        <p>Chain <code>[...]</code> and method calls to reach inside. Collections are shared by reference, not copied.</p>
+        <div class="demo-row">
+<pre class="code">order = shabdkosh(
+    "table": 4,
+    "items": soochi("Dal", "Roti", "Lassi")
+)
+order["items"].jodo("Kheer")
+
+same = order          // not a copy
+same["table"] = 6
+
+dasso "table " + order["table"] + ", "
+dasso order["items"].ginti() + " items, "
+dasso "second is " + order["items"][1]</pre>
+            <div class="out"><small>Output</small><pre><?pun
+order = shabdkosh(
+    "table": 4,
+    "items": soochi("Dal", "Roti", "Lassi")
+)
+order["items"].jodo("Kheer")
+
+same = order          // not a copy
+same["table"] = 6
+
+dasso "table " + order["table"] + ", "
+dasso order["items"].ginti() + " items, "
+dasso "second is " + order["items"][1]
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="numbers">
+        <h2>Text to number, and rounding</h2>
+        <p>Request values arrive as text, and Pun can't convert <code>"7"</code> to <code>7</code> yet. The workaround <code>backend.pun</code> uses is to look the text up in a table built with a loop. <code>x % 1</code> gives the part after the decimal point, which makes rounding possible.</p>
+        <div class="demo-row">
+<pre class="code">kaam ank(text, uppar) {
+    je text == khali {
+        wapas khali
+    }
+    lookup = shabdkosh()
+    n = 0
+    jad_tak n &lt;= uppar {
+        lookup["" + n] = n
+        n = n + 1
+    }
+    wapas lookup[text]
+}
+
+kaam gol2(x) {
+    sau = x * 100 + 0.5
+    wapas (sau - sau % 1) / 100
+}
+
+dasso ank("7", 10) * 2 + "\n"
+dasso "[" + ank("seven", 10) + "]\n"
+dasso 100 / 3 + " rounds to " + gol2(100 / 3)</pre>
+            <div class="out"><small>Output</small><pre><?pun
+kaam ank(text, uppar) {
+    je text == khali {
+        wapas khali
+    }
+    lookup = shabdkosh()
+    n = 0
+    jad_tak n <= uppar {
+        lookup["" + n] = n
+        n = n + 1
+    }
+    wapas lookup[text]
+}
+
+kaam gol2(x) {
+    sau = x * 100 + 0.5
+    wapas (sau - sau % 1) / 100
+}
+
+dasso ank("7", 10) * 2 + "\n"
+dasso "[" + ank("seven", 10) + "]\n"
+dasso 100 / 3 + " rounds to " + gol2(100 / 3)
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="comments">
+        <h2>Comments</h2>
+        <p>Comments print nothing. Careful: <code>?&gt;</code> ends the Pun block wherever it appears, even inside a comment or a string.</p>
+        <div class="demo-row">
+<pre class="code">// a line comment
+/* a block comment
+   over several lines */
+dasso "only this prints"   // after code too</pre>
+            <div class="out"><small>Output</small><pre><?pun
+// a line comment
+/* a block comment
+   over several lines */
+dasso "only this prints"   // after code too
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="mang">
+        <h2><code>mang</code>: the request</h2>
+        <p><code>mang.method</code>, <code>mang.path</code>, and the read-only maps <code>mang.GET</code> (query string) and <code>mang.POST</code> (form fields). Pun has no HTML-escaping helper yet, so this example prints a lookup instead of the raw value. Send the form to see the output change.</p>
+        <div class="demo-row">
+<pre class="code">dasso mang.method + " " + mang.path + "\n"
+dasso "GET has from? " + mang.GET.hai("from") + "\n"
+dasso "POST fields: " + mang.POST.ginti() + "\n"
+
+names = shabdkosh("dal": "Dal Makhani", "saag": "Sarson da Saag")
+picked = mang.POST["dish"]
+je picked != khali &amp;&amp; names.hai(picked) {
+    dasso "you picked " + names[picked]
+}
+nahi_ta {
+    dasso "nothing picked yet"
+}</pre>
+            <div class="out"><small>Output</small><pre><?pun
+dasso mang.method + " " + mang.path + "\n"
+dasso "GET has from? " + mang.GET.hai("from") + "\n"
+dasso "POST fields: " + mang.POST.ginti() + "\n"
+
+names = shabdkosh("dal": "Dal Makhani", "saag": "Sarson da Saag")
+picked = mang.POST["dish"]
+je picked != khali && names.hai(picked) {
+    dasso "you picked " + names[picked]
+}
+nahi_ta {
+    dasso "nothing picked yet"
+}
+?></pre>
+                <form class="inline" method="POST" action="features.pun?from=tour#mang">
+                    <select name="dish" aria-label="Dish">
+                        <option value="dal">Dal Makhani</option>
+                        <option value="saag">Sarson da Saag</option>
+                    </select>
+                    <input name="note" placeholder="a note" aria-label="Note">
+                    <button type="submit" class="primary">POST it</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="demo" id="debug">
+        <h2>Printing a whole value: <code>print_r</code></h2>
+        <p><code>dasso</code> prints a collection as <code>[shabdkosh]</code>, so here is a small <code>print_r</code> that walks into it. Pun has no type check, so it compares the printed form instead. It prints values raw, so keep it for debugging on your own machine.</p>
+        <div class="demo-row">
+<pre class="code">kaam print_r(value, indent) {
+    kism = "" + value
+    je kism == "[shabdkosh]" {
+        dasso kism + " (\n"
+        har_ik k, v vich value {
+            dasso indent + "    [" + k + "] =&gt; "
+            print_r(v, indent + "    ")
+        }
+        dasso indent + ")\n"
+    }
+    nahi_ta {
+        je kism == "[soochi]" || kism == "[jatha]" {
+            dasso kism + " (\n"
+            idx = 0
+            har_ik v vich value {
+                dasso indent + "    [" + idx + "] =&gt; "
+                print_r(v, indent + "    ")
+                idx = idx + 1
+            }
+            dasso indent + ")\n"
+        }
+        nahi_ta {
+            dasso value + "\n"
+        }
+    }
+}
+
+print_r(mang, "")</pre>
+            <div class="out"><small>Output</small><pre><?pun
+kaam print_r(value, indent) {
+    kism = "" + value
+    je kism == "[shabdkosh]" {
+        dasso kism + " (\n"
+        har_ik k, v vich value {
+            dasso indent + "    [" + k + "] => "
+            print_r(v, indent + "    ")
+        }
+        dasso indent + ")\n"
+    }
+    nahi_ta {
+        je kism == "[soochi]" || kism == "[jatha]" {
+            dasso kism + " (\n"
+            idx = 0
+            har_ik v vich value {
+                dasso indent + "    [" + idx + "] => "
+                print_r(v, indent + "    ")
+                idx = idx + 1
+            }
+            dasso indent + ")\n"
+        }
+        nahi_ta {
+            dasso value + "\n"
+        }
+    }
+}
+
+print_r(mang, "")
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="jawab">
+        <h2><code>jawab</code>: the response</h2>
+        <p>Set <code>jawab.status</code> and <code>jawab.type</code> anywhere in the page, even inside a function. This code isn't run here, because it would turn this page into JSON. <code>backend.pun</code> does it for real. Open these links to see its replies:</p>
+        <div class="demo-row">
+<pre class="code">jawab.type = "application/json; charset=UTF-8"
+
+kaam galti(code, message) {
+    jawab.status = code
+    dasso "{\"ok\": false, \"errors\": [\"" + message + "\"]}"
+}
+
+galti(422, "Pick a dish from the menu.")</pre>
+            <div class="out"><small>Try</small>
+                <ul class="flow">
+                    <li><a href="backend.pun?action=menu">?action=menu</a> (200)</li>
+                    <li><a href="backend.pun?action=stats&amp;tick=7">?action=stats&amp;tick=7</a> (200)</li>
+                    <li><a href="backend.pun?action=stats&amp;tick=abc">?action=stats&amp;tick=abc</a> (422)</li>
+                    <li><a href="backend.pun?action=order">?action=order</a> (405, needs POST)</li>
+                    <li><a href="backend.pun?action=nope">?action=nope</a> (400)</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="demo" id="mysql">
+        <h2><code>bhandar</code>: MySQL</h2>
+        <p><code>bhandar()</code> describes a connection, <code>jodo()</code> opens it and <code>taiyar()</code> prepares SQL with <code>?</code> placeholders that <code>mull()</code> fills in, so visitor input never changes the query. <code>ik()</code> returns one row (a <code>shabdkosh</code>, or <code>khali</code>), <code>saare()</code> returns a <code>soochi</code> of rows, <code>chalao()</code> runs a change and <code>badle()</code> counts the rows it changed. This code isn't run here because it needs your database. <a href="members.pun">members.pun</a> runs it for the dashboard; start from <code>members.example.pun</code>.</p>
+        <div class="demo-row">
+<pre class="code">db = bhandar("mysql", "localhost", 3306, "pun_sample", "pun_user", "change-me")
+db.jodo()
+
+create = db.taiyar("CREATE TABLE IF NOT EXISTS pun_members (naam VARCHAR(100) NOT NULL, email VARCHAR(190) NOT NULL PRIMARY KEY)")
+create.chalao()
+
+insert = db.taiyar("INSERT INTO pun_members (naam, email) VALUES (?, ?)")
+insert.mull(1, "Simran")
+insert.mull(2, "simran@example.com")
+insert.chalao()
+dasso insert.badle() + " row added\n"
+
+change = db.taiyar("UPDATE pun_members SET naam = ? WHERE email = ?")
+change.mull(1, "Simran Kaur")
+change.mull(2, "simran@example.com")
+change.chalao()
+
+one = db.taiyar("SELECT naam FROM pun_members WHERE email = ?")
+one.mull(1, "simran@example.com")
+row = one.ik()
+je row != khali {
+    dasso row["naam"] + "\n"
+}
+
+har_ik member vich db.taiyar("SELECT naam, email FROM pun_members").saare() {
+    dasso member["naam"] + " &lt;" + member["email"] + "&gt;\n"
+}
+
+db.band()</pre>
+            <div class="out"><small>With an empty table it prints</small><pre>1 row added
+Simran Kaur
+Simran Kaur &lt;simran@example.com&gt;</pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="files">
+        <h2>Static files and fragments</h2>
+        <p>Pun Server runs <code>.pun</code> files and sends everything else as it is: <a href="assets/style.css">assets/style.css</a>, <a href="assets/app.js">assets/app.js</a> and <a href="assets/highlight.js">assets/highlight.js</a> (which colours the code on this page). A <code>.pun</code> file doesn't have to be a whole page: <a href="frontend.pun">frontend.pun</a> is a fragment that the dashboard fetches. To see what happens when something goes wrong, go to <a href="errors.pun">errors.pun</a>.</p>
+    </section>
+</main>
+
+<footer>
+    <div class="wrap">Rendered by Pun Server for <code><?pun dasso mang.method + " " + mang.path ?></code></div>
+</footer>
+
+<script src="assets/highlight.js"></script>
+</body>
+</html>

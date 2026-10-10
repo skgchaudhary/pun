@@ -2,3 +2,7 @@
 target/*
 !target/pun-server.jar
 !target/*.md
+
+# Local secrets: never commit these. Copy the .example files instead.
+.env
+chowk/sample_site/members.pun

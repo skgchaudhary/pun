@@ -1,0 +1,93 @@
+<?pun
+/*
+  dashboard.pun: the page shell for the Pind Dhaba dashboard.
+
+  1. This page renders the header and the staff picker on the server.
+  2. assets/app.js fetches frontend.pun?from=dashboard and puts it inside
+     #frontend. Pun has no server-side include yet, so the include happens
+     in the browser.
+  3. app.js then gets the menu from backend.pun, polls backend.pun for live
+     numbers every 3 seconds, and posts orders and sign-ups to it.
+
+  Shows: mang.GET with a whitelist, shabdkosh lookups, har_ik over keys and
+  values, je / nahi_ta, and mang.method / mang.path.
+*/
+
+// Staff come from a fixed list. Pun has no HTML-escaping helper yet, so this
+// page never prints request text: ?staff= is only used as a key to look up.
+staff = shabdkosh(
+    "simran":   "Simran Kaur",
+    "gurpreet": "Gurpreet Singh",
+    "harleen":  "Harleen Gill"
+)
+
+staff_id = mang.GET["staff"]
+je staff_id == khali || !staff.hai(staff_id) {
+    staff_id = "simran"
+}
+naam = staff[staff_id]
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pind Dhaba Dashboard</title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.pun">Pind Dhaba<span>.</span></a>
+        <nav aria-label="Sample site">
+            <a href="index.pun">Home</a>
+            <a href="dashboard.pun" aria-current="page">Dashboard</a>
+            <a href="features.pun">Feature tour</a>
+            <a href="errors.pun">Errors</a>
+            <a href="/">Pun home</a>
+        </nav>
+    </div>
+</header>
+
+<main class="wrap">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">dashboard.pun</span>
+            <h1>Sat Sri Akal, <?pun dasso naam ?></h1>
+            <p class="muted">Widgets from <code>frontend.pun</code>, live JSON from <code>backend.pun</code>.</p>
+        </div>
+        <form method="GET" action="dashboard.pun">
+            <label>On shift
+                <select name="staff" onchange="this.form.submit()">
+<?pun
+har_ik id, full_name vich staff {
+    je id == staff_id {
+        dasso "                    <option value=\"" + id + "\" selected>" + full_name + "</option>\n"
+    }
+    nahi_ta {
+        dasso "                    <option value=\"" + id + "\">" + full_name + "</option>\n"
+    }
+}
+?>
+                </select>
+            </label>
+            <noscript><button type="submit">Switch</button></noscript>
+        </form>
+    </div>
+
+    <div id="frontend" data-src="frontend.pun?from=dashboard">
+        <p class="muted">Loading frontend.pun&hellip;</p>
+    </div>
+    <noscript><p class="error-box">The dashboard needs JavaScript to load frontend.pun and talk to backend.pun.</p></noscript>
+</main>
+
+<footer>
+    <div class="wrap">Rendered by Pun Server for <code><?pun dasso mang.method + " " + mang.path ?></code></div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
