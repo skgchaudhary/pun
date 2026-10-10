@@ -1,7 +1,7 @@
 {
   "name": "pun-language",
-  "displayName": "Pun Language",
-  "description": "Syntax highlighting for Pun (.pun) template files",
+  "displayName": "PUNjabi Server-side Scripting",
+  "description": "Syntax highlighting for PUNjabi Server-side Scripting (.pun) files",
   "version": "0.0.1",
   "publisher": "local",
   "license": "UNLICENSED",
@@ -15,7 +15,7 @@
     "languages": [
       {
         "id": "pun",
-        "aliases": ["Pun", "pun"],
+        "aliases": ["PUNjabi Server-side Scripting", "Pun", "pun"],
         "extensions": [".pun"],
         "configuration": "./language-configuration.json"
       }

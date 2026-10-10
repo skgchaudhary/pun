@@ -33,7 +33,7 @@ kaam factorial(n) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PUNjabi Scripting Language</title>
+<title>PUNjabi Server-side Scripting</title>
 <link rel="icon" type="image/png" href="/pun_logo.png">
 <link rel="apple-touch-icon" href="/pun_logo.png">
 <style>
@@ -307,7 +307,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
             <span class="eyebrow">Pun 1.0.0 &middot; Oye Chal Peya</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede">
-                Pun is a small, PHP-style server-side language. Write ordinary HTML, drop in
+                <strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language.
+                Write ordinary HTML, drop in
                 <code>&lt;?pun &hellip; ?&gt;</code> blocks using keywords like <code>je</code>,
                 <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.
             </p>
