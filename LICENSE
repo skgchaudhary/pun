@@ -1,0 +1,177 @@
+PUN RUNTIME LICENSE
+Version 1.0
+
+Copyright (c) 2026 Suneet Kumar Chaudhary
+All rights reserved.
+
+This license applies to the PUN scripting language runtime distributed as
+"pun-server.jar" and related proprietary runtime components ("PUN Runtime").
+
+1. PERMITTED USE
+
+You are granted a non-exclusive, worldwide, royalty-free license to use the
+PUN Runtime for:
+
+- learning and experimentation;
+- developing applications written in the PUN scripting language;
+- running PUN applications locally or on servers;
+- internal business use;
+- commercial applications and services built using PUN;
+- deployment of PUN applications to development, testing, staging, and
+  production environments.
+
+Applications and scripts written by users using the PUN language remain the
+property of their respective authors. This license does not claim ownership
+of user-created .pun files, application code, HTML, CSS, JavaScript, database
+code, or other content created using PUN.
+
+2. DISTRIBUTION OF THE PUN RUNTIME
+
+You may redistribute an unmodified copy of pun-server.jar when it is
+reasonably necessary to distribute or deploy an application built using PUN.
+
+Any redistributed copy must:
+
+- remain unmodified;
+- retain this license and all copyright notices;
+- not be represented as your own runtime, interpreter, compiler, or product;
+- not be sold as a standalone competing runtime.
+
+You may also direct users to the official PUN distribution location instead
+of redistributing the runtime.
+
+3. PROPRIETARY IMPLEMENTATION
+
+The internal implementation of the PUN Runtime, including but not limited to
+its Java source code, lexer, parser, interpreter, execution engine, template
+engine, server implementation, database integration, command-line tools,
+desktop tools, and related internal components, is proprietary.
+
+Except where expressly permitted by applicable law, you may not:
+
+- reverse engineer the PUN Runtime;
+- decompile or disassemble the PUN Runtime;
+- attempt to reconstruct or derive its Java source code;
+- modify, patch, translate, or create derivative versions of the PUN Runtime;
+- extract substantial implementation logic from the PUN Runtime;
+- use the PUN Runtime to create a substantially equivalent or competing
+  interpreter, compiler, runtime, or execution engine;
+- bypass technical restrictions intended to protect the runtime.
+
+Nothing in this section limits rights that cannot legally be restricted under
+applicable law.
+
+4. LANGUAGE SYNTAX AND DOCUMENTATION
+
+PUN language syntax, examples, keywords, and publicly available documentation
+may be viewed, studied, referenced, discussed, and used for the purpose of
+writing PUN applications.
+
+Public documentation does not grant ownership of the proprietary runtime
+implementation.
+
+Examples include language constructs and tokens such as:
+
+je
+nahi_ta
+jad_tak
+har_ik
+vich
+kaam
+wapas
+dasso
+sach
+jhooth
+khali
+soochi
+shabdkosh
+jatha
+bhandar
+
+5. USER APPLICATIONS
+
+You may license applications you create using PUN under any license you choose,
+including proprietary, commercial, open-source, or free software licenses.
+
+The copyright and licensing of your application are independent from the
+copyright and licensing of the PUN Runtime.
+
+This permission does not grant the right to relicense the PUN Runtime itself.
+
+6. COMMERCIAL USE
+
+Commercial use of PUN applications is permitted.
+
+You may charge users for applications, websites, APIs, services, hosting,
+consulting, development, or other products created using PUN.
+
+You may not sell, sublicense, or commercially offer the PUN Runtime itself as
+a standalone product without prior written permission from the copyright
+holder.
+
+7. TRADEMARKS AND BRANDING
+
+This license does not grant rights to use the names:
+
+PUN
+PUN Server
+PUN Scripting Language
+
+or associated logos and branding in a manner that suggests ownership,
+sponsorship, certification, or endorsement.
+
+You may truthfully state that your software is:
+
+"Built with PUN"
+
+"Runs on PUN"
+
+or otherwise describe compatibility with PUN.
+
+8. THIRD-PARTY COMPONENTS
+
+The PUN Runtime may contain or depend upon third-party libraries.
+
+Those components remain subject to their respective licenses. Nothing in this
+license is intended to restrict rights granted under the licenses of those
+third-party components.
+
+9. NO WARRANTY
+
+THE PUN RUNTIME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+USE OF THE PUN RUNTIME IS AT YOUR OWN RISK.
+
+10. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER SHALL
+NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES ARISING FROM THE USE OR INABILITY TO USE THE PUN
+RUNTIME.
+
+11. TERMINATION
+
+Your rights under this license terminate automatically if you materially
+violate its terms.
+
+Upon termination, you must stop distributing the PUN Runtime.
+
+Applications and .pun source code independently created by you remain yours.
+
+12. ADDITIONAL PERMISSIONS
+
+Additional permissions, commercial licensing arrangements, redistribution
+rights, modification rights, source licensing, OEM licensing, or other
+arrangements may be granted separately in writing by the copyright holder.
+
+13. OWNERSHIP
+
+The PUN Runtime remains the intellectual property of:
+
+Suneet Kumar Chaudhary
+
+No ownership of the PUN Runtime is transferred under this license.
+
+Use of the PUN Runtime constitutes acceptance of these terms.
