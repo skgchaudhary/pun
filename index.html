@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pun Language Docs</title>
+<meta name="description" content="Pun is a small PHP-style server-side scripting language with Punjabi keywords. How to run Pun Server, and the full language reference.">
+<link rel="icon" type="image/png" href="chowk/pun_logo.png">
+<style>
+:root {
+    --bg: #fbf7f0;
+    --surface: #ffffff;
+    --ink: #1f1a17;
+    --muted: #675e55;
+    --line: #e6dccd;
+    --kesri: #b4500a;
+    --kesri-soft: #fdf0e3;
+    --neela: #1e3a8a;
+    --code-bg: #1c1917;
+    --code-ink: #f5efe6;
+    --code-k: #fdba74;
+    --code-s: #86efac;
+    --code-n: #93c5fd;
+    --code-c: #a8a29e;
+    --code-b: #f9a8d4;
+    --phulkari-a: #7a1f2b;
+    --phulkari-b: #e8a33d;
+    --radius: 14px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --pa: "Noto Sans Gurmukhi", "Raavi", "Mukta Mahee", var(--sans);
+    --mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #14110e;
+        --surface: #1e1a16;
+        --ink: #f3ece2;
+        --muted: #aaa096;
+        --line: #322b24;
+        --kesri: #f59e4b;
+        --kesri-soft: #2a1d12;
+        --neela: #9db8ff;
+        --code-bg: #0e0c0a;
+    }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--sans); }
+a { color: var(--neela); }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -.015em; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 .4em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); margin: 0 0 .5em; }
+h3 { font-size: 1.1rem; margin: 1.6em 0 .5em; }
+p { margin: 0 0 1em; }
+code, pre, kbd { font-family: var(--mono); font-variant-ligatures: none; }
+p code, li code, td code, dd code, h2 code, h3 code {
+    font-size: .88em; background: var(--kesri-soft); color: var(--kesri);
+    padding: .1em .35em; border-radius: 5px;
+}
+kbd {
+    font-size: .85em; padding: .1em .45em; border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 6px; background: var(--surface);
+}
+.pa { font-family: var(--pa); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+.muted { color: var(--muted); }
+
+.phulkari {
+    height: 10px;
+    background:
+        conic-gradient(from 45deg, var(--phulkari-b) 25%, transparent 0 50%, var(--phulkari-b) 0 75%, transparent 0) 0 0 / 14px 14px,
+        var(--phulkari-a);
+}
+header.top { border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 12px 20px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
+.brand img { width: 28px; height: 28px; border-radius: 6px; }
+.brand span { color: var(--kesri); }
+header.top nav { display: flex; gap: 4px 16px; flex-wrap: wrap; font-size: .92rem; }
+header.top nav a { color: var(--muted); text-decoration: none; }
+header.top nav a:hover { color: var(--kesri); }
+
+section { padding: 48px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 64px; }
+.eyebrow {
+    display: inline-block; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--kesri); margin-bottom: 10px;
+}
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 60ch; }
+.lede code { white-space: nowrap; }
+.note {
+    padding: 12px 16px; border-radius: var(--radius); border: 1px dashed var(--kesri);
+    background: var(--kesri-soft); margin: 0 0 1.2em;
+}
+.note strong { color: var(--kesri); }
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 0; }
+.buttons a {
+    padding: 9px 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); text-decoration: none; font-weight: 600;
+}
+.buttons a.primary { background: var(--kesri); border-color: var(--kesri); color: #fff; }
+@media (prefers-color-scheme: dark) { .buttons a.primary { color: #1a1008; } }
+.buttons a:hover { border-color: var(--kesri); }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+.card h3 { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+
+pre.code {
+    margin: 0 0 1.2em; padding: 14px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-ink);
+    border-radius: var(--radius); font-size: .86rem; line-height: 1.6;
+}
+.file {
+    display: flex; justify-content: space-between; gap: 12px; background: var(--code-bg); color: var(--code-c);
+    font: .76rem var(--mono); padding: 10px 18px 0; border-radius: var(--radius) var(--radius) 0 0;
+}
+.file + pre.code { border-radius: 0 0 var(--radius) var(--radius); }
+.code .k { color: var(--code-k); font-weight: 600; }
+.code .s { color: var(--code-s); }
+.code .n { color: var(--code-n); }
+.code .c { color: var(--code-c); font-style: italic; }
+.code .b { color: var(--code-b); }
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin: 0 0 1.2em; }
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+td code { white-space: nowrap; }
+td.pa { font-size: 1.05rem; white-space: nowrap; }
+
+ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 0 0 1.2em; }
+ol.steps > li { counter-increment: step; position: relative; padding: 0 0 14px 44px; }
+ol.steps > li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--kesri); color: #fff; font-weight: 700; font-size: .9rem;
+}
+@media (prefers-color-scheme: dark) { ol.steps > li::before { color: #1a1008; } }
+
+/* A drawing of the Pun Server Manager window */
+.window { align-self: start; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); font-size: .85rem; margin: 0 0 1.2em; }
+.window .bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--kesri-soft); font-weight: 600; }
+.window .bar img { width: 16px; height: 16px; border-radius: 3px; }
+.window .body { padding: 14px; display: grid; gap: 8px; }
+.window label { font-weight: 600; }
+.window .field { display: flex; gap: 8px; }
+.window .input { flex: 1; min-width: 0; padding: 5px 9px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-family: var(--mono); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.window .btn { padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); white-space: nowrap; }
+.window .btn.off { opacity: .5; }
+.window .log { font-family: var(--mono); font-size: .76rem; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; color: var(--muted); }
+
+.toc { columns: 3 200px; gap: 24px; padding: 0; margin: 0; list-style: none; }
+.toc li { break-inside: avoid; padding: 3px 0; }
+footer { padding: 28px 0 40px; color: var(--muted); font-size: .88rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+@media (max-width: 760px) {
+    .hero { grid-template-columns: minmax(0, 1fr); }
+    section { padding: 36px 0; }
+    header.top { position: static; }
+}
+</style>
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="#top"><img src="chowk/pun_logo.png" alt="">Pun<span>.</span></a>
+        <nav aria-label="Sections">
+            <a href="#start">Get started</a>
+            <a href="#run">Run Pun Server</a>
+            <a href="#language">Language</a>
+            <a href="#collections">Collections</a>
+            <a href="#web">Requests</a>
+            <a href="#database">MySQL</a>
+            <a href="#cheatsheet">Cheat sheet</a>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+
+<section>
+    <div class="wrap hero">
+        <div>
+            <span class="eyebrow">Pun 1.1.0 &middot; Hun Gall Bani!</span>
+            <h1>Backend scripting that speaks Punjabi.</h1>
+            <p class="lede">Pun is a small, PHP-style server-side language. Write ordinary HTML, drop in <code>&lt;?pun &hellip; ?&gt;</code> blocks with keywords like <code>je</code>, <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.</p>
+            <div class="buttons">
+                <a class="primary" href="#run">Run Pun Server</a>
+                <a href="#language">Language reference</a>
+                <a href="https://github.com/skgchaudhary/pun">Source on GitHub</a>
+            </div>
+        </div>
+        <div>
+            <div class="file"><span>hello.pun</span><span>HTML + Pun</span></div>
+<pre class="code">&lt;h1&gt;Hello&lt;/h1&gt;
+
+&lt;?pun
+naam = mang.GET["naam"]
+
+je naam == khali {
+    naam = "Dost"
+}
+
+dasso "&lt;p&gt;Sat Sri Akal " + naam + "&lt;/p&gt;"
+?&gt;</pre>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <div class="note"><strong>This page is plain HTML.</strong> GitHub Pages can only serve static files, so no Pun code runs here. To run <code>.pun</code> pages, start Pun Server on your own machine as shown below.</div>
+        <ul class="toc">
+            <li><a href="#start">Requirements and download</a></li>
+            <li><a href="#run">Run Pun Server: desktop app</a></li>
+            <li><a href="#cli">Run Pun Server: command line</a></li>
+            <li><a href="#repl">The REPL</a></li>
+            <li><a href="#language">Script blocks</a></li>
+            <li><a href="#keywords">Keywords</a></li>
+            <li><a href="#values">Values and printing</a></li>
+            <li><a href="#operators">Operators</a></li>
+            <li><a href="#control">je, jad_tak, har_ik</a></li>
+            <li><a href="#functions">Functions and scope</a></li>
+            <li><a href="#collections">Collections</a></li>
+            <li><a href="#web">mang: the request</a></li>
+            <li><a href="#jawab">jawab: the response</a></li>
+            <li><a href="#database">MySQL with bhandar</a></li>
+            <li><a href="#server">Server, errors, security</a></li>
+            <li><a href="#limits">Not in Pun yet</a></li>
+            <li><a href="#more">Sample site, editor, docs</a></li>
+            <li><a href="#cheatsheet">Cheat sheet</a></li>
+        </ul>
+    </div>
+</section>
+
+<section id="start">
+    <div class="wrap">
+        <span class="eyebrow">Get started</span>
+        <h2>Requirements and download</h2>
+        <ol class="steps">
+            <li><strong>Install Java 21 or newer.</strong> Any JDK or JRE works, for example Eclipse Temurin. Check with <code>java -version</code>.</li>
+            <li><strong>Get the repo.</strong> Clone it, or download it as a ZIP from GitHub and unzip it:
+<pre class="code">git clone https://github.com/skgchaudhary/pun.git
+cd pun</pre></li>
+            <li><strong>Find the two folders that matter.</strong> <code>target/pun-server.jar</code> is Pun Server (the engine, one executable JAR with everything it needs), and <code>chowk/</code> is the default website folder it serves.
+<pre class="code">pun/
+  chowk/              your website: .pun pages, CSS, JS, images
+    index.pun
+    sample_site/
+  target/
+    pun-server.jar    Pun Server
+    *.md              the full documentation</pre></li>
+        </ol>
+        <p>You can also download just <a href="https://github.com/skgchaudhary/pun/raw/main/target/pun-server.jar">pun-server.jar</a> and point it at any folder of <code>.pun</code> files.</p>
+    </div>
+</section>
+
+<section id="run">
+    <div class="wrap">
+        <span class="eyebrow">Run Pun Server</span>
+        <h2>Option 1: the desktop app (Pun Server Manager)</h2>
+        <div class="grid2">
+            <div>
+                <ol class="steps">
+                    <li><strong>Open the JAR.</strong> Double-click <code>target/pun-server.jar</code>, or run it without arguments:
+<pre class="code">java -jar target/pun-server.jar</pre>
+                        The <strong>Pun Server Manager</strong> window opens.</li>
+                    <li><strong>Project Folder.</strong> It starts at the <code>chowk</code> folder next to <code>target</code>. Click <kbd>Browse</kbd> to serve another folder.</li>
+                    <li><strong>Port.</strong> <code>8080</code> unless you change it.</li>
+                    <li><strong>Click <kbd>Start Server</kbd>.</strong> Status changes to <code>RUNNING</code> and the URL appears, for example <code>http://localhost:8080</code>.</li>
+                    <li><strong>Click <kbd>Open Browser</kbd></strong> to open the site. Every request is listed in the log at the bottom of the window.</li>
+                    <li><strong>Click <kbd>Stop Server</kbd></strong> when you're done.</li>
+                </ol>
+                <p class="muted">If double-clicking opens the JAR as a ZIP file, Java isn't set up to open <code>.jar</code> files. Use the <code>java -jar</code> command instead.</p>
+            </div>
+            <div class="window" role="img" aria-label="Drawing of the Pun Server Manager window: Project Folder with a Browse button, Port, Start Server, Stop Server and Open Browser buttons, status, URL and a request log">
+                <div class="bar"><img src="chowk/pun_logo.png" alt="">Pun Server Manager - Pun 1.1.0 - Hun Gall Bani!</div>
+                <div class="body">
+                    <label>Project Folder</label>
+                    <div class="field"><span class="input">&hellip;\pun\chowk</span><span class="btn">Browse</span></div>
+                    <label>Port</label>
+                    <div class="field"><span class="input">8080</span></div>
+                    <div class="field"><span class="btn off">Start Server</span><span class="btn">Stop Server</span><span class="btn">Open Browser</span></div>
+                    <div><strong>Status: RUNNING</strong></div>
+                    <div><strong>URL: http://localhost:8080</strong></div>
+                    <div class="log">GET /<br>GET /sample_site/dashboard.pun<br>GET /sample_site/backend.pun?action=menu</div>
+                </div>
+            </div>
+        </div>
+
+        <h2 id="cli" style="margin-top: 1.4em">Option 2: the command line</h2>
+        <p>Use this in a terminal, over SSH, in Docker or on a headless server. Logs go to the terminal; stop the server with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>java -jar target/pun-server.jar serve</code></td><td>Serves <code>chowk/</code> on port 8080 (creates <code>chowk</code> next to <code>target</code> if it's missing)</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar serve ./my-site</code></td><td>Serves another folder</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar serve ./my-site --port 9000</code></td><td>Uses another port (short form: <code>-p 9000</code>)</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar repl</code></td><td>Opens the interactive Pun prompt</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar help</code></td><td>Lists the commands</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar version</code></td><td>Prints the version</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>On Windows PowerShell use backslashes: <code>java -jar target\pun-server.jar serve</code>. Exit codes: <code>0</code> success, <code>1</code> runtime or startup error, <code>2</code> wrong command-line usage.</p>
+        <p>With the server running, URLs map to files in the website folder:</p>
+<pre class="code">GET /                 -&gt; index.pun
+GET /form.pun         -&gt; form.pun, run by Pun
+GET /css/style.css    -&gt; css/style.css, sent as it is
+GET /sample_site/     -&gt; sample_site/index.pun</pre>
+
+        <h3 id="repl">The REPL</h3>
+        <p>The REPL runs Pun statements with the same lexer, parser and interpreter as <code>.pun</code> pages. Variables and functions stay until you leave. Use <code>dasso</code> to print: plain expressions run but don't print. <code>mang</code> and <code>jawab</code> only exist in pages served over HTTP.</p>
+<pre class="code">pun&gt; x = 2
+pun&gt; kaam double(n) { wapas n * 2 }
+pun&gt; dasso double(x)
+4
+pun&gt; je sach {
+...&gt;     dasso "ok"
+...&gt; }
+ok
+pun&gt; :quit</pre>
+        <p>REPL commands: <code>:help</code>, <code>:quit</code>, <code>:exit</code>.</p>
+    </div>
+</section>
+
+<section id="language">
+    <div class="wrap">
+        <span class="eyebrow">Language reference</span>
+        <h2>Files and script blocks</h2>
+        <p>Pun pages use the <code>.pun</code> extension. Everything outside <code>&lt;?pun &hellip; ?&gt;</code> is sent to the browser as it is; each block is replaced by whatever it prints with <code>dasso</code>.</p>
+<pre class="code">&lt;h1&gt;Header&lt;/h1&gt;
+
+&lt;?pun
+dasso "&lt;p&gt;Generated by Pun&lt;/p&gt;"
+?&gt;
+
+&lt;footer&gt;Footer&lt;/footer&gt;</pre>
+        <ul>
+            <li><strong>All blocks on a page share one set of variables</strong>: set <code>naam</code> in the first block and use it in the last.</li>
+            <li><strong>Each block must be complete.</strong> A <code>{</code> opened in one block can't be closed in another, so build conditional HTML with <code>dasso</code> inside one block.</li>
+            <li><strong><code>?&gt;</code> always ends the block</strong>, even inside a string or a comment.</li>
+            <li>Semicolons are optional. Braces <code>{ }</code> mark blocks.</li>
+        </ul>
+
+        <h3>Comments</h3>
+<pre class="code">// a line comment
+/* a block comment
+   over several lines */</pre>
+
+        <h3 id="keywords">Keywords</h3>
+        <p>Every keyword is an everyday Punjabi word chosen for what it does.</p>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Pun</th><th>Gurmukhi</th><th>Means</th><th>In Pun</th></tr></thead>
+                <tbody>
+                    <tr><td><code>je</code></td><td class="pa" lang="pa">ਜੇ</td><td>if</td><td>Starts a condition</td></tr>
+                    <tr><td><code>nahi_ta</code></td><td class="pa" lang="pa">ਨਹੀਂ ਤਾਂ</td><td>otherwise</td><td>The else branch</td></tr>
+                    <tr><td><code>jad_tak</code></td><td class="pa" lang="pa">ਜਦ ਤੱਕ</td><td>as long as</td><td>While loop</td></tr>
+                    <tr><td><code>har_ik</code></td><td class="pa" lang="pa">ਹਰ ਇੱਕ</td><td>each one</td><td>Loop over a collection</td></tr>
+                    <tr><td><code>vich</code></td><td class="pa" lang="pa">ਵਿੱਚ</td><td>in</td><td>Names the collection in <code>har_ik</code></td></tr>
+                    <tr><td><code>kaam</code></td><td class="pa" lang="pa">ਕੰਮ</td><td>work</td><td>Defines a function</td></tr>
+                    <tr><td><code>wapas</code></td><td class="pa" lang="pa">ਵਾਪਸ</td><td>back</td><td>Returns a value</td></tr>
+                    <tr><td><code>dasso</code></td><td class="pa" lang="pa">ਦੱਸੋ</td><td>tell</td><td>Prints into the page, like <code>echo</code></td></tr>
+                    <tr><td><code>sach</code></td><td class="pa" lang="pa">ਸੱਚ</td><td>truth</td><td><code>true</code></td></tr>
+                    <tr><td><code>jhooth</code></td><td class="pa" lang="pa">ਝੂਠ</td><td>lie</td><td><code>false</code></td></tr>
+                    <tr><td><code>khali</code></td><td class="pa" lang="pa">ਖ਼ਾਲੀ</td><td>empty</td><td><code>null</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Built-ins: <code>mang</code> (ਮੰਗ, the request), <code>jawab</code> (ਜਵਾਬ, the response), <code>soochi</code> (ਸੂਚੀ, list), <code>shabdkosh</code> (ਸ਼ਬਦਕੋਸ਼, dictionary), <code>jatha</code> (ਜੱਥਾ, set) and <code>bhandar</code> (ਭੰਡਾਰ, a database). <code>nava</code> is reserved for a later version.</p>
+
+        <h3 id="values">Values, variables and printing</h3>
+        <p>Assign to create a variable; there's no declaration keyword. Pun has numbers, strings, <code>sach</code> / <code>jhooth</code>, <code>khali</code>, and three collections.</p>
+<pre class="code">naam   = "Suneet"      // strings use double quotes only
+umar   = 37
+price  = 99.95
+active = sach
+value  = khali         // prints as nothing
+
+dasso "Hello " + naam + "\n"   // \" and \n work inside strings
+dasso "Total: " + 30           // Total: 30
+dasso 10 / 4                   // 2.5: division keeps decimals</pre>
+        <p><code>+</code> joins left to right, so <code>"Total: " + 10 + 20</code> prints <code>Total: 1020</code>; write <code>"Total: " + (10 + 20)</code> for <code>Total: 30</code>. Whole numbers print without <code>.0</code>.</p>
+
+        <h3 id="operators">Operators</h3>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Kind</th><th>Operators</th><th>Notes</th></tr></thead>
+                <tbody>
+                    <tr><td>Arithmetic</td><td><code>+ - * / %</code></td><td><code>%</code> works on decimals too: <code>x - x % 1</code> drops the fraction</td></tr>
+                    <tr><td>Comparison</td><td><code>== != &gt; &lt; &gt;= &lt;=</code></td><td><code>&lt; &gt; &lt;= &gt;=</code> need numbers</td></tr>
+                    <tr><td>Logic</td><td><code>&amp;&amp; || !</code></td><td>Stop early: <code>x == khali || x &lt; 1</code> is safe</td></tr>
+                    <tr><td>Assignment</td><td><code>=</code></td><td></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Precedence, lowest first: assignment, <code>||</code>, <code>&amp;&amp;</code>, equality, comparison, <code>+ -</code>, <code>* / %</code>, unary, call. So <code>10 + 20 * 2</code> is <code>50</code>. In conditions, <code>jhooth</code>, <code>khali</code> and <code>0</code> are false; text is true.</p>
+
+        <h3 id="control">Conditions and loops</h3>
+<pre class="code">je umar &gt;= 18 {
+    dasso "Adult"
+}
+nahi_ta {
+    dasso "Minor"
+}
+
+// Pun has no "else if": put a je inside nahi_ta
+je bill &gt;= 1000 {
+    dasso "free lassi"
+}
+nahi_ta {
+    je bill &gt;= 500 {
+        dasso "10% off"
+    }
+}
+
+i = 1
+jad_tak i &lt;= 5 {          // while loop
+    dasso i
+    i = i + 1
+}
+
+har_ik dish vich soochi("Saag", "Dal") {     // lists and sets: values
+    dasso dish
+}
+har_ik key, value vich shabdkosh("naam": "Suneet") {   // maps: key and value
+    dasso key + "=" + value
+}</pre>
+        <p>With one name, <code>har_ik</code> over a map gives its keys. The loop works on a copy taken when it starts, so changing the collection inside the loop is safe. Pun stops a <code>jad_tak</code> loop that runs more than 1,000,000 times.</p>
+
+        <h3 id="functions">Functions and scope</h3>
+<pre class="code">kaam jod(a, b) {
+    wapas a + b
+}
+
+kaam factorial(n) {
+    je n &lt;= 1 { wapas 1 }
+    wapas n * factorial(n - 1)    // functions can call themselves
+}
+
+kaam do_vaar(f, x) {
+    wapas f(f(x))                 // functions are values
+}
+
+dasso jod(10, 20)                 // 30
+dasso do_vaar(factorial, 3)       // 720</pre>
+        <ul>
+            <li>Define a function before the line that calls it.</li>
+            <li>Inside a function, parameters and new names are local. Assigning to a name the page already has <strong>changes the page's variable</strong>.</li>
+            <li>A variable first created inside a <code>je</code> or loop block is gone after the block. Create it before the block to keep its value.</li>
+        </ul>
+    </div>
+</section>
+
+<section id="collections">
+    <div class="wrap">
+        <span class="eyebrow">Collections</span>
+        <h2><code>soochi</code>, <code>shabdkosh</code> and <code>jatha</code></h2>
+<pre class="code">names = soochi("Suneet", "Aman")              // list, indexed from 0
+user  = shabdkosh("naam": "Suneet", "umar": 37)  // map with text keys
+roles = jatha("admin", "dev", "admin")        // set: keeps each value once
+
+names[0] = "Simran"          // change by index
+user["city"] = "Mumbai"      // add or change a key
+dasso user["missing"]        // a missing key gives khali
+dasso roles.ginti()          // 2
+
+order = shabdkosh("table": 4, "items": soochi("Dal", "Roti"))
+order["items"].jodo("Lassi") // reach inside with [ ] and methods
+dasso order["items"][1]      // Roti</pre>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Method</th><th><code>soochi</code></th><th><code>shabdkosh</code></th><th><code>jatha</code></th></tr></thead>
+                <tbody>
+                    <tr><td><code>ginti()</code></td><td>number of items</td><td>number of keys</td><td>number of members</td></tr>
+                    <tr><td><code>hai(x)</code></td><td>contains the value</td><td>has the key</td><td>contains the member</td></tr>
+                    <tr><td><code>jodo(x)</code></td><td>append</td><td>&ndash;</td><td>add</td></tr>
+                    <tr><td><code>hatao(x)</code></td><td>remove first match</td><td>remove the key</td><td>remove the member</td></tr>
+                    <tr><td><code>saaf()</code></td><td>empty it</td><td>empty it</td><td>empty it</td></tr>
+                    <tr><td><code>pehla()</code> / <code>akhri()</code></td><td>first / last, or <code>khali</code></td><td>&ndash;</td><td>&ndash;</td></tr>
+                    <tr><td><code>chaabiyan()</code></td><td>&ndash;</td><td>list of keys</td><td>&ndash;</td></tr>
+                    <tr><td><code>mull()</code></td><td>&ndash;</td><td>list of values</td><td>&ndash;</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <ul>
+            <li><code>shabdkosh</code> keys must be text and keep the order you added them. Checking <code>map.hai(khali)</code> is an error, so test for <code>khali</code> first.</li>
+            <li>List indexes must be whole numbers inside the list; use <code>jodo()</code> to add to the end. <code>jatha</code> has no indexes.</li>
+            <li>Collections are shared, not copied: <code>b = a</code> makes two names for one list. A <code>jatha</code> can't hold other collections.</li>
+            <li><code>dasso</code> prints a collection as <code>[soochi]</code>, <code>[shabdkosh]</code> or <code>[jatha]</code>; loop over it to print its contents.</li>
+        </ul>
+    </div>
+</section>
+
+<section id="web">
+    <div class="wrap">
+        <span class="eyebrow">Web pages</span>
+        <h2><code>mang</code>: the request</h2>
+<pre class="code">dasso mang.method                // GET or POST
+dasso mang.path                  // /form.pun
+naam  = mang.GET["naam"]         // ?naam=Suneet
+email = mang.POST["email"]       // a form field
+
+je naam == khali || naam == "" {    // missing gives khali, empty gives ""
+    naam = "Dost"
+}
+je mang.POST.hai("email") {
+    dasso "got an email"
+}</pre>
+        <ul>
+            <li><code>mang.GET</code> and <code>mang.POST</code> are read-only <code>shabdkosh</code> values, already URL-decoded (<code>?naam=Suneet%20Kumar</code> gives <code>Suneet Kumar</code>). With repeated keys the last value wins.</li>
+            <li>POST bodies must be <code>application/x-www-form-urlencoded</code>, as an HTML form or <code>fetch</code> with <code>URLSearchParams</code> sends them. Other non-empty bodies get <code>415</code>.</li>
+            <li>Limits: query string 16 KiB (<code>414</code>), form body 1 MiB (<code>413</code>), 1,000 parameters; bad URL encoding gives <code>400</code>.</li>
+            <li>Pun has no HTML-escaping helper yet, so <code>dasso mang.GET["naam"]</code> puts exactly what was sent into the page. Compare or look up request values instead of printing them.</li>
+        </ul>
+<pre class="code">&lt;form method="POST" action="process.pun"&gt;
+    &lt;input name="naam"&gt;
+    &lt;input name="email" type="email"&gt;
+    &lt;button type="submit"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+        <h2 id="jawab" style="margin-top: 1.4em"><code>jawab</code>: the response</h2>
+        <p><code>jawab.status</code> (default <code>200</code>) and <code>jawab.type</code> (default <code>text/html; charset=UTF-8</code>) can be set anywhere in the page, even inside a function.</p>
+<pre class="code">jawab.type = "application/json; charset=UTF-8"
+jawab.status = 422
+dasso "{\"ok\": false, \"error\": \"Pick a dish\"}"</pre>
+    </div>
+</section>
+
+<section id="database">
+    <div class="wrap">
+        <span class="eyebrow">Database</span>
+        <h2>MySQL with <code>bhandar</code></h2>
+        <p>Pun talks to MySQL through prepared statements: values are bound with <code>mull()</code>, never joined into the SQL text.</p>
+<pre class="code">db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+db.jodo()                                    // open the connection
+
+stmt = db.taiyar("SELECT naam, email FROM users WHERE active = ?")
+stmt.mull(1, sach)                           // parameters count from 1
+har_ik user vich stmt.saare() {              // every row, as shabdkosh values
+    dasso user["naam"]
+}
+
+one = db.taiyar("SELECT naam FROM users WHERE id = ?")
+one.mull(1, 10)
+user = one.ik()                              // one row, or khali
+je user != khali { dasso user["naam"] }
+
+add = db.taiyar("INSERT INTO users (naam, email) VALUES (?, ?)")
+add.mull(1, "Simran")
+add.mull(2, "simran@example.com")
+add.chalao()                                 // INSERT, UPDATE, DELETE, CREATE
+dasso add.badle()                            // rows changed
+
+db.band()                                    // close the connection</pre>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>API</th><th>Does</th></tr></thead>
+                <tbody>
+                    <tr><td><code>bhandar(driver, host, port, database, user, password)</code></td><td>Describes a connection (<code>"mysql"</code> only, for now)</td></tr>
+                    <tr><td><code>db.jodo()</code> / <code>db.band()</code></td><td>Open / close; calling either twice is safe</td></tr>
+                    <tr><td><code>db.taiyar(sql)</code></td><td>Prepares a statement with <code>?</code> placeholders</td></tr>
+                    <tr><td><code>stmt.mull(index, value)</code></td><td>Binds a string, number, boolean or <code>khali</code></td></tr>
+                    <tr><td><code>stmt.ik()</code> / <code>stmt.saare()</code></td><td>One row (or <code>khali</code>) / a <code>soochi</code> of rows</td></tr>
+                    <tr><td><code>stmt.chalao()</code> / <code>stmt.badle()</code></td><td>Run a change / count the rows it changed</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Rows come back as <code>shabdkosh</code> values keyed by column name or SQL alias. SQL <code>NULL</code> becomes <code>khali</code>, numbers become numbers, booleans become <code>sach</code> / <code>jhooth</code>, and dates come back as text. Pun can't read <code>.env</code> files or environment variables, so connection details live in the <code>.pun</code> file that uses them. Keep that file out of git, and keep the server private while it holds a real password.</p>
+    </div>
+</section>
+
+<section id="server">
+    <div class="wrap">
+        <span class="eyebrow">Server</span>
+        <h2>How Pun Server behaves</h2>
+        <div class="grid2">
+            <div class="card">
+                <h3>Pages and files</h3>
+                <p><code>.pun</code> files are run by Pun. <code>.html</code>, <code>.css</code>, <code>.js</code>, <code>.json</code>, <code>.txt</code>, <code>.png</code>, <code>.jpg</code>, <code>.gif</code>, <code>.svg</code> and <code>.ico</code> are sent as they are. A folder serves its <code>index.pun</code>. Paths outside the website folder are refused.</p>
+            </div>
+            <div class="card">
+                <h3>Errors</h3>
+                <p>A syntax or runtime error replaces the page with a development error page (HTTP 500) giving the file, line and message, never a Java stack trace:</p>
+<pre class="code">Pun Script Error
+File: index.pun
+Line: 12
+Message: Variable 'user' does not exist.</pre>
+            </div>
+            <div class="card">
+                <h3>Sandbox</h3>
+                <p>Scripts get no Java reflection, JVM classes, process execution, filesystem access, environment variables or <code>System.exit</code>. Only <code>mang</code>, <code>jawab</code>, the collections and <code>bhandar</code> are exposed.</p>
+            </div>
+            <div class="card">
+                <h3>Keep secrets out of the website folder</h3>
+                <p>Pun Server sends any file in the website folder that isn't a <code>.pun</code> page, including dotfiles such as <code>.env</code>. Keep secrets beside the website folder, not inside it.</p>
+            </div>
+        </div>
+
+        <h3 id="limits">Not in Pun yet</h3>
+        <p>Cookies and sessions, imports and modules (so no server-side includes), JSON and multipart request bodies, string functions such as converting <code>"7"</code> to <code>7</code>, HTML escaping, reading <code>.env</code>, database drivers other than MySQL, transactions and connection pooling, a package manager, and a production server mode.</p>
+    </div>
+</section>
+
+<section id="more">
+    <div class="wrap">
+        <span class="eyebrow">Learn more</span>
+        <h2>Sample site, editor support and docs</h2>
+        <div class="grid2">
+            <div class="card">
+                <h3>Sample site: Pind Dhaba</h3>
+                <p>A restaurant dashboard in <a href="https://github.com/skgchaudhary/pun/tree/main/chowk/sample_site"><code>chowk/sample_site</code></a>: a page that loads a fragment, live JSON updates, a MySQL members list, and a tour that runs every feature with its output. Start Pun Server and open <code>http://localhost:8080/sample_site/</code>.</p>
+            </div>
+            <div class="card">
+                <h3>VS Code highlighting</h3>
+                <p><a href="https://github.com/skgchaudhary/pun/tree/main/vscode-pun"><code>vscode-pun</code></a> colours <code>.pun</code> files like PHP: HTML outside the blocks, Pun inside. Install it from that folder:</p>
+<pre class="code">npx @vscode/vsce package --skip-license --allow-missing-repository
+code --install-extension pun-language-0.0.1.vsix</pre>
+            </div>
+            <div class="card">
+                <h3>Full documentation</h3>
+                <p>The Markdown docs ship with the JAR in <code>target/</code>:</p>
+                <ul>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SCRIPTING.md">PUN_SCRIPTING.md</a>: the language</li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SCRIPTING_CLI.md">PUN_SCRIPTING_CLI.md</a>: command line and REPL</li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SERVER_MANAGE.md">PUN_SERVER_MANAGE.md</a>: running and managing the server</li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/README.md">README.md</a>: overview and architecture</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="cheatsheet">
+    <div class="wrap">
+        <span class="eyebrow">Cheat sheet</span>
+        <h2>Pun on one screen</h2>
+<pre class="code">// variable and output
+naam = "Suneet"
+dasso "Hello " + naam
+
+// if / else
+je naam == "Suneet" { dasso "Welcome" } nahi_ta { dasso "Ji Aayan Nu" }
+
+// loops
+i = 1
+jad_tak i &lt;= 3 {
+    dasso i
+    i = i + 1
+}
+har_ik key, value vich shabdkosh("naam": "Suneet") { dasso key + "=" + value }
+
+// function
+kaam jod(a, b) { wapas a + b }
+dasso jod(10, 20)
+
+// collections
+names = soochi("Suneet", "Aman")
+names.jodo("Simran")
+dasso names.ginti()
+
+// request and response
+naam = mang.GET["naam"]
+email = mang.POST["email"]
+jawab.status = 200
+jawab.type = "text/html"
+
+// MySQL
+db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+db.jodo()
+stmt = db.taiyar("SELECT naam FROM users WHERE id = ?")
+stmt.mull(1, 10)
+user = stmt.ik()
+db.band()</pre>
+    </div>
+</section>
+
+</main>
+
+<div class="phulkari" aria-hidden="true"></div>
+<footer>
+    <div class="wrap">
+        <span>Pun 1.1.0 &middot; Hun Gall Bani! &middot; <span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <a href="https://github.com/skgchaudhary/pun">github.com/skgchaudhary/pun</a>
+    </div>
+</footer>
+
+<script>
+// Colours Pun code in <pre class="code">: keywords, strings, numbers, comments.
+(function () {
+    var TOKENS = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*")|\b(je|nahi_ta|jad_tak|har_ik|vich|kaam|wapas|dasso|sach|jhooth|khali)\b|\b(mang|jawab|soochi|shabdkosh|jatha|bhandar)\b|\b(\d+(?:\.\d+)?)\b/g;
+    var CLASSES = ['c', 's', 'k', 'b', 'n'];
+    document.querySelectorAll('pre.code').forEach(function (pre) {
+        var text = pre.textContent, out = document.createDocumentFragment(), last = 0, m;
+        TOKENS.lastIndex = 0;
+        while ((m = TOKENS.exec(text))) {
+            out.appendChild(document.createTextNode(text.slice(last, m.index)));
+            var span = document.createElement('span');
+            for (var g = 1; g <= 5; g++) if (m[g] !== undefined) { span.className = CLASSES[g - 1]; break; }
+            span.textContent = m[0];
+            out.appendChild(span);
+            last = m.index + m[0].length;
+        }
+        out.appendChild(document.createTextNode(text.slice(last)));
+        pre.textContent = '';
+        pre.appendChild(out);
+    });
+})();
+</script>
+</body>
+</html>
