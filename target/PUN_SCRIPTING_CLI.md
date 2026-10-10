@@ -174,6 +174,34 @@ pun> dasso double(x)
 4
 ```
 
+Collections also work in the REPL:
+
+```text
+pun> names = soochi("Suneet", "Aman", "Suneet")
+pun> roles = jatha(names)
+pun> dasso roles.ginti()
+2
+pun> user = shabdkosh("naam": "Suneet", "city": "Mumbai")
+pun> har_ik key, value vich user { dasso key + "=" + value + " " }
+naam=Suneet city=Mumbai
+```
+
+Database built-ins are available in the REPL and in `.pun` files. Version 1
+supports MySQL through JDBC prepared statements:
+
+```text
+pun> db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+pun> db.jodo()
+pun> stmt = db.taiyar("SELECT naam FROM users WHERE id = ?")
+pun> stmt.mull(1, 10)
+pun> user = stmt.ik()
+pun> je user != khali { dasso user["naam"] }
+pun> db.band()
+```
+
+HTTP-only objects such as `mang.GET`, `mang.POST`, and `jawab` are available
+when rendering `.pun` files through the web server, not as REPL globals.
+
 Multiline blocks are supported:
 
 ```text
@@ -240,3 +268,13 @@ Open the REPL:
 ```bash
 java -jar target/pun-server.jar repl
 ```
+
+Serve the database example:
+
+```bash
+java -jar target/pun-server.jar serve ./examples/database
+```
+
+The database example expects a local MySQL database named `pun_test` and a
+`users` table. Pun database access uses prepared statements through
+`bhandar()`, `db.taiyar()`, and `stmt.mull()`.

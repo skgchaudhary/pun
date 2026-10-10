@@ -124,7 +124,7 @@ project/
 | `jhooth` | false |
 | `khali` | null |
 
-Reserved for later: `har_ik`, `vich`, `nava`, `jodo`.
+Reserved for later: `nava`.
 
 ## Syntax Examples
 
@@ -175,17 +175,92 @@ kaam jod(a, b) {
 dasso jod(10, 20)
 ```
 
+Collections:
+
+```pun
+names = soochi("Suneet", "Aman", "Suneet")
+names.jodo("Gurpreet")
+
+user = shabdkosh("naam": "Suneet", "umar": 37)
+user["city"] = "Mumbai"
+
+roles = jatha("admin", "developer", "admin")
+dasso roles.ginti()
+
+har_ik name vich names {
+    dasso name
+}
+
+har_ik key, value vich user {
+    dasso key + "=" + value
+}
+```
+
 ## Request And Response Objects
 
 Pun exposes `mang` for request data:
 
 ```pun
 naam = mang.GET["naam"]
+email = mang.POST["email"]
 dasso mang.method
 dasso mang.path
 ```
 
-Missing query values return `khali`.
+`mang.GET` contains decoded query parameters. `mang.POST` contains decoded
+form fields from `application/x-www-form-urlencoded` POST requests. Missing
+values return `khali`. GET and POST are separate read-only `shabdkosh`
+collections.
+
+Request parsing rules:
+
+- query string limit: 16 KiB
+- form body limit: 1 MiB
+- parameter limit: 1,000
+- repeated GET/POST keys: last value wins, original key position remains
+- malformed URL encoding returns `400`
+- oversized form bodies return `413`
+- oversized query strings return `414`
+- unsupported non-empty POST content types return `415`
+- JSON and multipart request bodies are not parsed into `mang.POST`
+
+Pun has three collection types backed by Java collections:
+
+| Pun | Java backing type |
+| --- | --- |
+| `shabdkosh` | `Map<String, PunValue>` |
+| `soochi` | `List<PunValue>` |
+| `jatha` | `Set<PunValue>` |
+
+Use `soochi(...)` for ordered lists, `shabdkosh("key": value)` for maps, and
+`jatha(...)` for insertion-ordered unique values. Collection assignment uses
+references, so mutating an alias mutates the same collection.
+
+```pun
+skills = soochi("PHP", "Java", "PHP")
+unique = jatha(skills)
+user = shabdkosh("naam": "Suneet", "skills": skills)
+dasso user["skills"][0]
+```
+
+Collection methods:
+
+| Method | `soochi` | `shabdkosh` | `jatha` |
+| --- | --- | --- | --- |
+| `ginti()` | element count | key count | member count |
+| `hai(value)` | contains value | contains key | contains member |
+| `jodo(value)` | append | not supported | add member |
+| `hatao(value)` | remove first value | remove key | remove member |
+| `saaf()` | clear | clear | clear |
+| `pehla()` | first value or `khali` | not supported | not supported |
+| `akhri()` | last value or `khali` | not supported | not supported |
+| `chaabiyan()` | not supported | list of keys | not supported |
+| `mull()` | not supported | list of values | not supported |
+
+Lists and sets iterate values. Maps iterate keys with one variable, or key/value
+pairs with two variables. Mutable collections compare by reference identity.
+`jatha` accepts strings, numbers, booleans, and `khali`; mutable collections are
+rejected as set members.
 
 Pun exposes `jawab` for response metadata:
 
@@ -195,6 +270,30 @@ jawab.type = "application/json"
 ```
 
 Defaults are status `200` and type `text/html; charset=UTF-8`.
+
+## Database Access
+
+Pun supports MySQL database access through JDBC prepared statements:
+
+```pun
+db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+db.jodo()
+
+stmt = db.taiyar("SELECT id, naam FROM users WHERE active = ?")
+stmt.mull(1, sach)
+users = stmt.saare()
+
+har_ik user vich users {
+    dasso user["naam"]
+}
+
+db.band()
+```
+
+The Pun API is intentionally small: `bhandar`, `jodo`, `taiyar`, `mull`,
+`ik`, `saare`, `chalao`, `badle`, and `band`. Raw JDBC objects are not exposed
+to scripts. The implementation is MySQL-first and uses a driver abstraction so
+additional JDBC databases can be added later without a major Pun syntax change.
 
 ## Template Blocks
 
@@ -243,17 +342,31 @@ http://localhost:8080/form.pun?naam=Suneet
 
 The rendered text for the query example includes `Sat Sri Akal Suneet`.
 
+The collection/request examples are in `examples/collections-demo`:
+
+```bash
+java -jar target/pun-server.jar serve ./examples/collections-demo
+```
+
+Then visit:
+
+```text
+http://localhost:8080/
+http://localhost:8080/get.pun?naam=Suneet&naam=Mona&city=New+Delhi
+http://localhost:8080/post.pun
+```
+
+The database example is in `examples/database`. It expects a local MySQL
+database named `pun_test` and a `users` table.
+
 ## Future Roadmap
 
 Planned but not fully implemented in this MVP:
 
-- arrays and maps
-- `har_ik ... vich` loops
-- POST data
 - cookies and sessions
-- JSON helpers
-- JDBC database support
-- MySQL and PostgreSQL
+- JSON request-body parsing
+- JDBC database drivers beyond MySQL
+- connection pooling and transactions
 - modules and imports
 - package manager
 - more Pun CLI commands

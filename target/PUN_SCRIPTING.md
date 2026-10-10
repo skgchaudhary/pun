@@ -71,6 +71,8 @@ Output:
 | `kaam` | function |
 | `wapas` | return |
 | `dasso` | print / echo |
+| `har_ik` | foreach |
+| `vich` | in |
 | `sach` | true |
 | `jhooth` | false |
 | `khali` | null |
@@ -78,10 +80,7 @@ Output:
 Reserved for future versions:
 
 ```pun
-har_ik
-vich
 nava
-jodo
 ```
 
 ## Comments
@@ -122,6 +121,9 @@ Pun currently supports:
 - string
 - boolean
 - null
+- `soochi` list
+- `shabdkosh` map / dictionary
+- `jatha` set
 
 Examples:
 
@@ -292,6 +294,42 @@ Output:
 
 The MVP has loop protection to stop extremely long loops.
 
+## Foreach Loops
+
+Use `har_ik ... vich ...` to iterate collections.
+
+Lists and sets iterate values:
+
+```pun
+names = soochi("Suneet", "Aman")
+
+har_ik name vich names {
+    dasso name
+}
+```
+
+Maps iterate keys when one variable is supplied:
+
+```pun
+user = shabdkosh("naam": "Suneet", "city": "Mumbai")
+
+har_ik key vich user {
+    dasso key
+}
+```
+
+Use two variables for map key/value iteration:
+
+```pun
+har_ik key, value vich user {
+    dasso key + "=" + value
+}
+```
+
+Pun takes a shallow snapshot at loop entry, so mutating the top-level collection
+during iteration does not throw Java concurrent modification errors. Nested
+mutable values remain references.
+
 ## Functions
 
 Use `kaam` to define a function.
@@ -365,6 +403,7 @@ Available properties:
 
 ```pun
 mang.GET
+mang.POST
 mang.method
 mang.path
 ```
@@ -417,6 +456,219 @@ becomes:
 ```text
 Suneet Kumar
 ```
+
+Repeated keys keep the first insertion position and the last value:
+
+```text
+?naam=Suneet&naam=Mona
+```
+
+```pun
+dasso mang.GET["naam"]
+```
+
+Output:
+
+```text
+Mona
+```
+
+Read form fields from `application/x-www-form-urlencoded` POST request bodies:
+
+```pun
+email = mang.POST["email"]
+```
+
+Example POST request:
+
+```bash
+curl --location "http://localhost:8080/post.pun?naam=query-name" \
+  --header "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "naam=form-name"
+```
+
+GET and POST are separate read-only `shabdkosh` collections. Mutating them with
+assignment or mutating collection methods produces a Pun runtime error.
+
+Unsupported non-empty POST body content types return `415`. Oversized form
+bodies return `413`; oversized query strings return `414`; malformed URL
+encoding returns `400`.
+
+Limits:
+
+| Limit | Value |
+| --- | --- |
+| Query string | 16 KiB |
+| Form body | 1 MiB |
+| Parameter count | 1,000 |
+
+## Collections
+
+Pun collection types are backed by Java collection types:
+
+| Pun | Java backing type |
+| --- | --- |
+| `shabdkosh` | `LinkedHashMap<String, PunValue>` |
+| `soochi` | `ArrayList<PunValue>` |
+| `jatha` | `LinkedHashSet<PunValue>` |
+
+Create collections with constructor functions:
+
+```pun
+dict = shabdkosh("naam": "Suneet", "umar": 37)
+dict["city"] = "Mumbai"
+
+items = soochi("PHP", "Java", "PHP")
+items.jodo("Pun")
+
+unique = jatha(items)
+```
+
+Rules:
+
+- `soochi` indexes are zero-based, non-negative integers.
+- List reads or assignments outside the current range are runtime errors.
+- `shabdkosh` keys must be strings.
+- Missing `shabdkosh` keys return `khali`.
+- Repeated keys in `shabdkosh(...)` use the last value and keep the original key position.
+- `jatha` preserves insertion order and removes duplicates.
+- `jatha(soochi(...))` converts list elements into set members.
+- `jatha` rejects mutable collection members in this version.
+- Collection assignment uses references, not copies.
+
+Collection methods:
+
+| Method | `soochi` | `shabdkosh` | `jatha` |
+| --- | --- | --- | --- |
+| `ginti()` | element count | key count | member count |
+| `hai(value)` | contains value | contains key | contains member |
+| `jodo(value)` | append | not supported | add member |
+| `hatao(value)` | remove first value | remove key | remove member |
+| `saaf()` | clear | clear | clear |
+| `pehla()` | first value or `khali` | not supported | not supported |
+| `akhri()` | last value or `khali` | not supported | not supported |
+| `chaabiyan()` | not supported | list of keys | not supported |
+| `mull()` | not supported | list of values | not supported |
+
+Lists and sets iterate values. Maps iterate keys with one variable, or keys and
+values with two variables:
+
+```pun
+har_ik item vich items {
+    dasso item
+}
+
+har_ik key, value vich dict {
+    dasso key
+    dasso value
+}
+```
+
+Numbers compare numerically, strings by content, booleans by value, and `khali`
+equals `khali`. Mutable collections compare by reference identity. `jatha`
+members cannot be mutable collections in this version.
+
+## Database Access
+
+Pun database access uses JDBC prepared statements. Version 1 supports MySQL
+through `bhandar(...)`; the runtime is structured around a database-driver
+registry so PostgreSQL, SQL Server, SQLite, and other JDBC databases can be
+added later without changing Pun syntax significantly.
+
+Create and open a database connection:
+
+```pun
+db = bhandar(
+    "mysql",
+    "localhost",
+    3306,
+    "pun_test",
+    "root",
+    "password"
+)
+
+db.jodo()
+```
+
+Prepare SQL and bind parameters by JDBC-style 1-based index:
+
+```pun
+stmt = db.taiyar(
+    "SELECT id, naam, email FROM users WHERE id = ?"
+)
+
+stmt.mull(1, 10)
+user = stmt.ik()
+
+je user != khali {
+    dasso user["naam"]
+}
+```
+
+Fetch multiple rows:
+
+```pun
+stmt = db.taiyar(
+    "SELECT id, naam, email FROM users WHERE active = ?"
+)
+
+stmt.mull(1, sach)
+users = stmt.saare()
+
+har_ik user vich users {
+    dasso user["naam"]
+}
+```
+
+Run inserts, updates, and deletes:
+
+```pun
+stmt = db.taiyar(
+    "INSERT INTO users (naam, email) VALUES (?, ?)"
+)
+
+stmt.mull(1, "Suneet")
+stmt.mull(2, "suneet@example.com")
+stmt.chalao()
+
+dasso stmt.badle()
+```
+
+Database API:
+
+| API | Meaning |
+| --- | --- |
+| `bhandar(driver, host, port, database, username, password)` | create a database connection object |
+| `db.jodo()` | open the JDBC connection; repeated calls are safe |
+| `db.taiyar(sql)` | create a prepared statement |
+| `db.band()` | close the connection; repeated calls are safe |
+| `stmt.mull(index, value)` | bind a prepared-statement parameter |
+| `stmt.ik()` | execute a SELECT and return one `shabdkosh`, or `khali` when no row exists |
+| `stmt.saare()` | execute a SELECT and return a `soochi` of row `shabdkosh` values |
+| `stmt.chalao()` | execute INSERT, UPDATE, or DELETE |
+| `stmt.badle()` | return the last affected-row count, or `0` before `chalao()` |
+
+Column labels and SQL aliases are used as row keys:
+
+```sql
+SELECT user_name AS naam FROM users
+```
+
+produces:
+
+```pun
+row["naam"]
+```
+
+Supported bind values are strings, numbers, booleans, and `khali`. Mutable
+collections (`soochi`, `shabdkosh`, `jatha`) are rejected as SQL parameters.
+SQL `NULL` becomes `khali`; text becomes strings; numeric columns become Pun
+numbers; boolean columns become `sach` or `jhooth`; date/time/timestamp columns
+are returned as strings in this version.
+
+Pun does not expose raw JDBC connections, statements, Java reflection, JVM
+classes, environment variables, filesystem access, or process execution through
+database support.
 
 ## Response Object: `jawab`
 
@@ -526,7 +778,7 @@ Sat Sri Akal Suneet
 10 + 20 = 30
 ```
 
-## Form Example
+## GET Form Example
 
 ```html
 <html>
@@ -544,6 +796,35 @@ naam = mang.GET["naam"]
 je naam != khali {
     dasso "<p>Sat Sri Akal " + naam + "</p>"
 }
+
+?>
+
+</body>
+</html>
+```
+
+## POST Form Example
+
+```html
+<html>
+<body>
+
+<form method="POST" action="/post.pun?source=query">
+    <input name="naam" placeholder="Tuhada naam">
+    <button type="submit">Submit</button>
+</form>
+
+<?pun
+
+je mang.POST.hai("naam") {
+    dasso "<p>Naam mil gaya</p>"
+}
+nahi_ta {
+    dasso "<p>Naam nahi aaya</p>"
+}
+
+dasso "<p>GET has source: " + mang.GET.hai("source") + "</p>"
+dasso "<p>POST has naam: " + mang.POST.hai("naam") + "</p>"
 
 ?>
 
@@ -611,13 +892,12 @@ Only explicit built-ins like `mang` and `jawab` are exposed.
 
 Not implemented yet:
 
-- arrays
-- maps
-- `har_ik ... vich` loops
-- POST data
 - cookies
 - sessions
-- database access
+- JSON request-body parsing
+- multipart form parsing
+- database drivers other than MySQL
+- connection pooling, transactions, named parameters, stored procedures, ORM, query builder, migrations, and async database operations
 - imports/modules
 - package manager
 - production server mode
@@ -655,10 +935,29 @@ kaam jod(a, b) {
 
 dasso jod(10, 20)
 
+// collections
+names = soochi("Suneet", "Aman")
+user = shabdkosh("naam": "Suneet", "city": "Mumbai")
+roles = jatha("admin", "developer", "admin")
+dasso roles.ginti()
+
+har_ik key, value vich user {
+    dasso key + "=" + value
+}
+
 // request
 naam = mang.GET["naam"]
+email = mang.POST["email"]
 
 // response
 jawab.status = 200
 jawab.type = "text/html"
+
+// database
+db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+db.jodo()
+stmt = db.taiyar("SELECT naam FROM users WHERE id = ?")
+stmt.mull(1, 10)
+user = stmt.ik()
+db.band()
 ```

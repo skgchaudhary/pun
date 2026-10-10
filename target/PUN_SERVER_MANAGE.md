@@ -91,7 +91,7 @@ curl http://localhost:8080/
 
 Stop the CLI server with `Ctrl+C`.
 
-## Punjabi Server Manager GUI
+## Pun Server Manager GUI
 
 Start the desktop GUI:
 
@@ -105,7 +105,7 @@ On Windows PowerShell:
 java -jar target\pun-server.jar
 ```
 
-In the Punjabi Server Manager GUI:
+In the Pun Server Manager GUI:
 
 1. Use the default `chowk` folder or choose another Pun website folder to serve.
 2. Choose the port.
@@ -144,3 +144,53 @@ java -jar target\pun-server.jar repl
 ```
 
 Use Pun syntax directly. Output is produced with `dasso`, and variables/functions remain available until the REPL exits. Use `:help` for REPL commands and `:quit` or `:exit` to leave.
+
+## Request Testing
+
+GET example:
+
+```bash
+curl "http://localhost:8080/get.pun?naam=Suneet&naam=Mona"
+```
+
+URL-encoded POST example:
+
+```bash
+curl --location "http://localhost:8080/post.pun?naam=query-name" \
+  --header "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "naam=form-name"
+```
+
+`multipart/form-data` and JSON request bodies are not parsed into `mang.POST`.
+Non-empty unsupported POST content types return `415`.
+
+## Database Example
+
+Pun database access is MySQL-first and uses JDBC prepared statements. Serve the
+database example with:
+
+```bash
+java -jar target/pun-server.jar serve ./examples/database
+```
+
+On Windows PowerShell:
+
+```powershell
+java -jar target\pun-server.jar serve .\examples\database
+```
+
+The example expects a local MySQL database named `pun_test` and a `users` table.
+The Pun scripting API is:
+
+```pun
+db = bhandar("mysql", "localhost", 3306, "pun_test", "root", "password")
+db.jodo()
+stmt = db.taiyar("SELECT id, naam FROM users WHERE active = ?")
+stmt.mull(1, sach)
+users = stmt.saare()
+db.band()
+```
+
+Only prepared statements are exposed to Pun scripts. Raw JDBC objects, Java
+reflection, JVM classes, environment variables, filesystem access, and process
+execution are not exposed through the database API.

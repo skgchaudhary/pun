@@ -185,6 +185,8 @@ Later add semantic diagnostics:
 - wrong function arity
 - invalid property on `mang`
 - invalid property on `jawab`
+- invalid database method on `bhandar` or prepared-statement values
+- unsupported database driver names known statically, when literal values are used
 - suspicious unreachable code after `wapas`
 
 Severity mapping:
@@ -207,6 +209,8 @@ Initial completion items:
 je
 nahi_ta
 jad_tak
+har_ik
+vich
 kaam
 wapas
 dasso
@@ -215,16 +219,33 @@ jhooth
 khali
 mang
 jawab
+shabdkosh
+soochi
+jatha
+bhandar
 ```
 
 Built-in property completions:
 
 ```pun
 mang.GET
+mang.POST
 mang.method
 mang.path
 jawab.status
 jawab.type
+shabdkosh
+soochi
+jatha
+bhandar
+db.jodo
+db.taiyar
+db.band
+stmt.mull
+stmt.ik
+stmt.saare
+stmt.chalao
+stmt.badle
 ```
 
 User symbols:
@@ -246,8 +267,46 @@ Prints a value into the rendered page response.
 
 ```text
 mang.GET
-Map of decoded query-string parameters. Missing keys return khali.
+Read-only shabdkosh of decoded query-string parameters. Missing keys return khali.
 ```
+
+```text
+mang.POST
+Read-only shabdkosh of decoded application/x-www-form-urlencoded POST fields.
+```
+
+```text
+soochi
+Creates a list collection. Supports ginti, hai, jodo, hatao, saaf, pehla, and akhri.
+```
+
+```text
+shabdkosh
+Creates a map collection with string keys. Supports ginti, hai, hatao, saaf, chaabiyan, and mull.
+```
+
+```text
+jatha
+Creates an insertion-ordered set. Supports ginti, hai, jodo, hatao, and saaf.
+```
+
+```text
+bhandar
+Creates a controlled Pun database connection object. Version 1 supports MySQL.
+Queries use JDBC prepared statements.
+```
+
+```text
+db.taiyar
+Creates a prepared SQL statement. Pun does not expose raw JDBC Statement or
+Connection objects to scripts.
+```
+
+```text
+stmt.mull
+Binds a prepared-statement parameter by 1-based index.
+```
+
 
 ```text
 jawab.status
@@ -318,6 +377,7 @@ Semantic token categories can include:
 - function
 - parameter
 - property
+- collection
 - string
 - number
 - comment
