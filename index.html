@@ -101,6 +101,8 @@ section { padding: 48px 0; border-bottom: 1px solid var(--line); scroll-margin-t
 @media (prefers-color-scheme: dark) { .buttons a.primary { color: #1a1008; } }
 .buttons a:hover { border-color: var(--kesri); }
 #about .buttons { margin: 14px 0 18px; }
+#about .story { max-width: 70ch; margin: 0 0 28px; font-size: 1.05rem; }
+#about .story h3 { margin: 1.4em 0 .4em; }
 
 .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
@@ -687,10 +689,20 @@ db.band()</pre>
     <div class="wrap">
         <span class="eyebrow">About the developer</span>
         <h2>Suneet Chaudhary</h2>
-        <p class="lede">Suneet designed PUNjabi Server-side Scripting and built Pun Server, the Java runtime that runs it.</p>
+        <div class="story">
+            <p>Hi, I’m Suneet Chaudhary. I’ve been working with PHP since 2016, and over the years it has often made me curious about what actually happens behind the scenes when a script is parsed, executed, and turned into a working web application. Following that curiosity little by little eventually led me to build a server-side scripting language of my own, with its own lexer, parser, interpreter, and a Java-powered runtime.</p>
+            <p>But after building it, I realized it was still just another backend scripting language. I wanted it to have an identity of its own.</p>
+            <h3>Why Punjabi?</h3>
+            <p>Over the years, while working in multinational companies with colleagues from the UK, Canada, the US, and other countries, I noticed something interesting. Whenever I asked foreign colleagues about their favourite Indian music, very often they would mention a Punjabi pop song—even if they didn’t understand the language.</p>
+            <p>That always stood out to me. Punjabi music, culture, and expressions have travelled far beyond Punjab and India, giving the language a remarkably global presence.</p>
+            <p>India itself is a country of many languages and cultures, and PUN is not meant to suggest that one language represents all of India. It is simply an experiment in bringing one of India's most internationally recognizable languages into programming.</p>
+            <p>There is another interesting part to the story: <strong>Punjabi isn't even my native language.</strong></p>
+            <p>My native language is <strong>Odia</strong>. I am originally from Odisha but grew up in Mumbai, Maharashtra, surrounded by different Indian languages and cultures. While building PUN, I used ChatGPT to help translate and refine programming concepts into Punjabi words that could feel natural as scripting-language tokens.</p>
+            <p>That is how an experimental backend language became <strong>PUN — PUNjabi Server-side Scripting</strong>: PHP-inspired scripting, powered by Java, with a distinctly Punjabi personality.</p>
+        </div>
         <div class="grid2">
             <div class="card">
-                <h3>What Suneet built</h3>
+                <h3>What is built</h3>
                 <ul>
                     <li>The language: PHP-style <code>&lt;?pun ?&gt;</code> blocks with Punjabi keywords such as <code>je</code>, <code>kaam</code> and <code>dasso</code></li>
                     <li>The engine: lexer, parser, interpreter and template engine</li>
@@ -699,7 +711,7 @@ db.band()</pre>
             </div>
             <div class="card">
                 <h3>Get in touch</h3>
-                <p>Connect with Suneet on LinkedIn, or follow the project on GitHub.</p>
+                <p>Connect with me on LinkedIn, or follow the project on GitHub.</p>
                 <div class="buttons">
                     <a class="primary" href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a>
                     <a href="https://github.com/skgchaudhary">GitHub</a>
