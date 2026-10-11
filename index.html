@@ -100,6 +100,7 @@ section { padding: 48px 0; border-bottom: 1px solid var(--line); scroll-margin-t
 .buttons a.primary { background: var(--kesri); border-color: var(--kesri); color: #fff; }
 @media (prefers-color-scheme: dark) { .buttons a.primary { color: #1a1008; } }
 .buttons a:hover { border-color: var(--kesri); }
+#about .buttons { margin: 14px 0 18px; }
 
 .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
@@ -176,6 +177,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
             <a href="#web">Requests</a>
             <a href="#database">MySQL</a>
             <a href="#cheatsheet">Cheat sheet</a>
+            <a href="#about">About Developer</a>
         </nav>
     </div>
 </header>
@@ -681,13 +683,40 @@ db.band()</pre>
     </div>
 </section>
 
+<section id="about">
+    <div class="wrap">
+        <span class="eyebrow">About the developer</span>
+        <h2>Suneet Chaudhary</h2>
+        <p class="lede">Suneet designed PUNjabi Server-side Scripting and built Pun Server, the Java runtime that runs it.</p>
+        <div class="grid2">
+            <div class="card">
+                <h3>What Suneet built</h3>
+                <ul>
+                    <li>The language: PHP-style <code>&lt;?pun ?&gt;</code> blocks with Punjabi keywords such as <code>je</code>, <code>kaam</code> and <code>dasso</code></li>
+                    <li>The engine: lexer, parser, interpreter and template engine</li>
+                    <li>Pun Server: the web server, MySQL support through <code>bhandar</code>, the command line and REPL, and the Pun Server Manager desktop app</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Get in touch</h3>
+                <p>Connect with Suneet on LinkedIn, or follow the project on GitHub.</p>
+                <div class="buttons">
+                    <a class="primary" href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a>
+                    <a href="https://github.com/skgchaudhary">GitHub</a>
+                </div>
+                <p class="muted">Pun Server is covered by the <a href="https://github.com/skgchaudhary/pun/blob/main/LICENSE">PUN Runtime License</a>. The runtime is proprietary, and the applications you write in Pun are yours.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 </main>
 
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
         <span>Pun 1.1.0 &middot; Hun Gall Bani! &middot; <span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
-        <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">github.com/skgchaudhary/pun</a></span>
+        <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>
 </footer>
 
