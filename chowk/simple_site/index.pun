@@ -1,0 +1,170 @@
+<?pun
+/*
+  simple_site/index.pun: a one-file Pun site, served for /simple_site/.
+  A small tea stall menu built with variables, shabdkosh, soochi, jatha,
+  har_ik, jad_tak, je / nahi_ta, kaam and mang.GET.
+*/
+
+dukaan = "Bittu Di Chaa"
+shehar = "Ludhiana"
+khulla = sach
+
+// Menu: item key -> details. Prices are in rupees.
+menu = shabdkosh(
+    "masala": shabdkosh("naam": "Masala Chaa", "kism": "Chaa", "keemat": 20),
+    "adrak": shabdkosh("naam": "Adrak Chaa", "kism": "Chaa", "keemat": 15),
+    "lassi": shabdkosh("naam": "Mithi Lassi", "kism": "Thanda", "keemat": 40),
+    "samosa": shabdkosh("naam": "Aloo Samosa", "kism": "Nashta", "keemat": 12),
+    "pakora": shabdkosh("naam": "Gobi Pakora", "kism": "Nashta", "keemat": 30)
+)
+special = soochi("masala", "pakora")
+
+kaam bill(keemat, ginti) {
+    wapas keemat * ginti
+}
+
+kaam menu_row(key, item) {
+    star = ""
+    je special.hai(key) {
+        star = " <span class=\"star\">aaj da special</span>"
+    }
+    wapas "<tr><td><a href=\"?chaa=" + key + "\">" + item["naam"] + "</a>" + star + "</td>"
+        + "<td>" + item["kism"] + "</td><td class=\"num\">Rs " + item["keemat"] + "</td></tr>\n"
+}
+
+// Walk the menu once: unique kinds (jatha), the cheapest item and the total price.
+kisman = jatha()
+sasta = khali
+jor = 0
+har_ik key, item vich menu {
+    kisman.jodo(item["kism"])
+    jor = jor + item["keemat"]
+    je sasta == khali || item["keemat"] < sasta["keemat"] {
+        sasta = item
+    }
+}
+
+// "/" is float division; x - x % 1 drops the decimals.
+ausat = jor / menu.ginti()
+ausat = ausat - ausat % 1
+
+kisman_list = ""
+har_ik kism vich kisman {
+    je kisman_list != "" {
+        kisman_list = kisman_list + ", "
+    }
+    kisman_list = kisman_list + kism
+}
+
+// ?chaa=masala picks an item. The raw value is only used as a lookup key and
+// never printed, because Pun does not HTML-escape output.
+chuni = mang.GET["chaa"]
+order = khali
+je chuni != khali && chuni != "" {
+    je menu.hai(chuni) {
+        order = menu[chuni]
+    }
+}
+
+// Bill for 1 to 4 cups of the chosen item, built with a jad_tak loop.
+bill_rows = ""
+cups = 1
+je order != khali {
+    jad_tak cups <= 4 {
+        bill_rows = bill_rows + "<tr><td>" + cups + "</td><td class=\"num\">Rs " + bill(order["keemat"], cups) + "</td></tr>\n"
+        cups = cups + 1
+    }
+}
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><?pun dasso dukaan ?></title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<style>
+  :root { --bg: #fdf8f0; --card: #ffffff; --ink: #2b2118; --muted: #7a6a5a; --accent: #c2410c; --line: #eadfce; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1c1712; --card: #262019; --ink: #f3e9dc; --muted: #b3a493; --accent: #fb923c; --line: #3a3128; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0; font-size: 2rem; color: var(--accent); }
+  h2 { margin: 0 0 12px; font-size: 1.15rem; }
+  .sub { margin: 4px 0 24px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 8px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+  tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); }
+  .star { font-size: 0.75rem; color: var(--muted); }
+  .open { color: #15803d; font-weight: 600; }
+  .closed { color: #b91c1c; font-weight: 600; }
+  ul { margin: 0; padding-left: 20px; }
+  footer { color: var(--muted); font-size: 0.875rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+
+<h1><?pun dasso dukaan ?></h1>
+<p class="sub">Chaa di hatti, <?pun dasso shehar ?>. Ik file, sirf Pun.</p>
+
+<?pun
+je khulla {
+    dasso "<p class=\"open\">Dukaan khulli hai: aao ji, chaa peeo!</p>"
+}
+nahi_ta {
+    dasso "<p class=\"closed\">Dukaan band hai. Kal milange.</p>"
+}
+?>
+
+<section>
+  <h2>Menu</h2>
+  <table>
+    <tr><th>Cheez</th><th>Kism</th><th class="num">Keemat</th></tr>
+<?pun
+har_ik key, item vich menu {
+    dasso menu_row(key, item)
+}
+?>
+  </table>
+</section>
+
+<section>
+  <h2>Tuhada order</h2>
+<?pun
+je order != khali {
+    dasso "<p>" + order["naam"] + ": Rs " + order["keemat"] + " ik da.</p>"
+    dasso "<table><tr><th>Ginti</th><th class=\"num\">Bill</th></tr>\n" + bill_rows + "</table>"
+}
+nahi_ta {
+    je chuni != khali && chuni != "" {
+        dasso "<p>Eh cheez menu vich nahi hai. Upar menu vichon chuno.</p>"
+    }
+    nahi_ta {
+        dasso "<p>Menu vichon koi cheez te click karo.</p>"
+    }
+}
+?>
+</section>
+
+<section>
+  <h2>Menu bare</h2>
+  <ul>
+    <li>Kul cheezan: <?pun dasso menu.ginti() ?></li>
+    <li>Kisman: <?pun dasso kisman_list ?></li>
+    <li>Sabh ton sasti: <?pun dasso sasta["naam"] + " (Rs " + sasta["keemat"] + ")" ?></li>
+    <li>Ausat keemat: lagbhag Rs <?pun dasso ausat ?></li>
+    <li>Dukaan khulli hai: <?pun dasso khulla ?></li>
+  </ul>
+</section>
+
+<footer>Banaya PUNjabi Server-side Scripting naal. <a href="/">Wapas chowk</a></footer>
+
+</main>
+</body>
+</html>
