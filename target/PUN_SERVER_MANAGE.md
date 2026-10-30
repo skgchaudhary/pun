@@ -1,5 +1,7 @@
 # Pun Server Management
 
+Applies to **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+
 This document covers how to start and manage the Pun web server from the command line and from the desktop GUI.
 
 ## Prerequisites

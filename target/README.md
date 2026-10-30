@@ -1,5 +1,7 @@
 # Pun Server
 
+**Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+
 Pun Server is a Java 21 desktop application and embedded web server for a small PHP-like server-side scripting language named Pun. Pun files use the `.pun` extension and mix normal HTML with backend script blocks:
 
 ```html
@@ -310,6 +312,10 @@ dasso naam
 ```
 
 Raw Pun source is never sent to the browser for `.pun` files.
+
+Unchanged `.pun` files up to 128 KiB can reuse parsed template segments across requests. The cache defaults to 128 entries and an estimated 16 MiB budget; larger files are read and rendered incrementally. Rendered responses stay in memory up to 64 KiB of UTF-8 bytes, then spill to a temporary file before being sent. Static files stream directly from disk. Each request still gets its own script variables, request and response objects, and database handles.
+
+These limits can be changed with JVM options: `-Dpun.cache.maxEntries=128`, `-Dpun.cache.maxWeightBytes=16777216`, `-Dpun.cache.maxFileBytes=131072`, and `-Dpun.response.memoryBytes=65536`. Set a cache limit to `0` to disable parsed-template caching.
 
 ## Architecture
 

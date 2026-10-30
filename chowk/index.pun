@@ -310,7 +310,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">Pun 1.0.0 &middot; Oye Chal Peya</span>
+            <span class="eyebrow">Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani!</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede">
                 <strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language.
@@ -352,7 +352,8 @@ naam = mang.GET[<span class="s">"naam"</span>]
         <h2>One request, one rendered page</h2>
         <p class="section-intro">
             Pun has its own lexer, parser and interpreter, all in Java. It does not translate Pun to Java and it does not use an external scripting engine.
-            When a browser asks for a <code>.pun</code> file, the request goes through these steps:
+            When a browser asks for a <code>.pun</code> file, the request goes through these steps.
+            Since Pun 2.0.0, an unchanged page up to 128 KiB keeps its parsed form, so repeat requests skip the lexer and parser.
         </p>
         <ol class="pipeline" aria-label="Request pipeline">
             <li>RequestHandler</li><li class="arrow" aria-hidden="true">&rarr;</li>
@@ -378,7 +379,7 @@ naam = mang.GET[<span class="s">"naam"</span>]
             </div>
             <div class="fact">
                 <h3>Sandboxed by design</h3>
-                <p>Scripts get no reflection, JVM classes, process execution, filesystem, environment variables or <code>System.exit</code>. Only <code>mang</code> and <code>jawab</code> are exposed.</p>
+                <p>Scripts get no reflection, JVM classes, process execution, filesystem, environment variables or <code>System.exit</code>. Only <code>mang</code>, <code>jawab</code>, the collections and <code>bhandar</code> are exposed.</p>
             </div>
         </div>
     </div>
@@ -772,7 +773,7 @@ db.band()</pre>
         </div>
 
         <p class="docs-note">
-            Also see <code>target/README.md</code> for the project overview: building with Maven, the GUI, CLI and REPL modes, the architecture and the roadmap.
+            Also see <code>target/README.md</code> for the project overview: building with Maven, the GUI, CLI and REPL modes, caching and memory limits, the architecture and the roadmap.
             Pun Server only serves files inside the website folder, so open these docs in your editor or repository browser.
         </p>
     </div>
@@ -860,7 +861,7 @@ java -jar target/pun-server.jar</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>Pun 1.0.0 &middot; Oye Chal Peya &middot; <span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani! &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>This page is <code>index.pun</code>, rendered by Pun Server for <?pun dasso mang.method + " " + mang.path ?></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>

@@ -189,7 +189,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">Pun 1.1.0 &middot; Hun Gall Bani!</span>
+            <span class="eyebrow">Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani!</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede"><strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language. Write ordinary HTML, drop in <code>&lt;?pun &hellip; ?&gt;</code> blocks with keywords like <code>je</code>, <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.</p>
             <div class="buttons">
@@ -282,7 +282,7 @@ cd pun</pre></li>
                 <p class="muted">If double-clicking opens the JAR as a ZIP file, Java isn't set up to open <code>.jar</code> files. Use the <code>java -jar</code> command instead.</p>
             </div>
             <div class="window" role="img" aria-label="Drawing of the Pun Server Manager window: Project Folder with a Browse button, Port, Start Server, Stop Server and Open Browser buttons, status, URL and a request log">
-                <div class="bar"><img src="chowk/pun_logo.png" alt="">Pun Server Manager - Pun 1.1.0 - Hun Gall Bani!</div>
+                <div class="bar"><img src="chowk/pun_logo.png" alt="">Pun Server Manager - Pun 2.0.0 - Gall Punjabi, Chaal Toofani!</div>
                 <div class="body">
                     <label>Project Folder</label>
                     <div class="field"><span class="input">&hellip;\pun\chowk</span><span class="btn">Browse</span></div>
@@ -607,6 +607,21 @@ Message: Variable 'user' does not exist.</pre>
             </div>
         </div>
 
+        <h3 id="caching">Caching and memory</h3>
+        <p>Pun Server keeps the parsed form of unchanged <code>.pun</code> files up to 128 KiB, so repeat requests skip the lexer and parser. Edit a file and the next request picks up the change. Larger files are read and rendered as they go. A rendered page stays in memory up to 64 KiB, then spills to a temporary file before it is sent, and static files stream straight from disk. Every request still gets its own variables, <code>mang</code>, <code>jawab</code> and database handles.</p>
+        <p>Change the limits with JVM options placed before <code>-jar</code>, for example <code>java -Dpun.cache.maxEntries=0 -jar target/pun-server.jar serve</code>. Setting a cache limit to <code>0</code> turns template caching off.</p>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Option</th><th>Default</th><th>What it limits</th></tr></thead>
+                <tbody>
+                    <tr><td><code>-Dpun.cache.maxEntries</code></td><td>128</td><td>Number of parsed pages kept</td></tr>
+                    <tr><td><code>-Dpun.cache.maxWeightBytes</code></td><td>16777216 (16 MiB)</td><td>Estimated memory for the whole cache</td></tr>
+                    <tr><td><code>-Dpun.cache.maxFileBytes</code></td><td>131072 (128 KiB)</td><td>Largest <code>.pun</code> file that gets cached</td></tr>
+                    <tr><td><code>-Dpun.response.memoryBytes</code></td><td>65536 (64 KiB)</td><td>Rendered output kept in memory before spilling to a temp file</td></tr>
+                </tbody>
+            </table>
+        </div>
+
         <h3 id="limits">Not in Pun yet</h3>
         <p>Cookies and sessions, imports and modules (so no server-side includes), JSON and multipart request bodies, string functions such as converting <code>"7"</code> to <code>7</code>, HTML escaping, reading <code>.env</code>, database drivers other than MySQL, transactions and connection pooling, a package manager, and a production server mode.</p>
     </div>
@@ -727,7 +742,7 @@ db.band()</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>Pun 1.1.0 &middot; Hun Gall Bani! &middot; <span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani! &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>
 </footer>

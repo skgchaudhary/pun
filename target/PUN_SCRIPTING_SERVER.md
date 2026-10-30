@@ -1,5 +1,7 @@
 # Pun Scripting Server
 
+Design notes for **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+
 This document describes a future Language Server Protocol implementation for Pun scripting. It is a design and implementation guide, not a completed feature.
 
 The goal is to support editor features for `.pun` files without changing the Pun language syntax or duplicating the compiler/runtime logic.

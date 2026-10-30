@@ -1,5 +1,7 @@
 # Pun Scripting CLI
 
+Applies to **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+
 This document covers running Pun from the command line.
 
 ## Requirements
