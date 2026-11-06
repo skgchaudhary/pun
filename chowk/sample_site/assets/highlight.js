@@ -7,7 +7,7 @@
   var TOKENS = new RegExp([
     '(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)',                                   // 1 comment
     '("(?:\\\\.|[^"\\\\])*")',                                                  // 2 string
-    '\\b(je|nahi_ta|jad_tak|har_ik|vich|kaam|wapas|dasso|sach|jhooth|khali)\\b', // 3 keyword
+    '\\b(je|nahi_ta|vekh|jeh|jad_tak|har_ik|vich|kaam|wapas|dasso|sach|jhooth|khali)\\b', // 3 keyword
     '\\b(mang|jawab|soochi|shabdkosh|jatha|bhandar)\\b',                        // 4 built-in
     '\\b(\\d+(?:\\.\\d+)?)\\b'                                                  // 5 number
   ].join('|'), 'g');

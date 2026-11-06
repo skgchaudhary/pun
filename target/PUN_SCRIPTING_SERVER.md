@@ -210,6 +210,8 @@ Initial completion items:
 ```pun
 je
 nahi_ta
+vekh
+jeh
 jad_tak
 har_ik
 vich
@@ -357,7 +359,7 @@ When implemented:
 - format only inside `<?pun ... ?>` blocks
 - preserve surrounding HTML
 - use 4 spaces for indentation
-- place `{` on the same line as `je`, `nahi_ta`, `jad_tak`, and `kaam`
+- place `{` on the same line as `je`, `nahi_ta`, `vekh`, `jeh`, `jad_tak`, and `kaam`
 
 Example:
 

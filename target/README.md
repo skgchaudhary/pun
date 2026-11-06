@@ -118,6 +118,8 @@ project/
 | --- | --- |
 | `je` | if |
 | `nahi_ta` | else |
+| `vekh` | switch |
+| `jeh` | case |
 | `jad_tak` | while |
 | `kaam` | function |
 | `wapas` | return |
@@ -154,6 +156,17 @@ je umar >= 18 {
 }
 nahi_ta {
     dasso "Minor"
+}
+```
+
+Switch on a value with `vekh`. The first matching `jeh` runs; `nahi_ta` runs when none match:
+
+```pun
+drink = "lassi"
+vekh drink {
+    jeh "chaa" { dasso "Chaa le aao!" }
+    jeh "lassi" { dasso "Vadda glass le aao!" }
+    nahi_ta { dasso "Paani hi de deo!" }
 }
 ```
 

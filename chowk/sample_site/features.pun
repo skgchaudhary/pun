@@ -44,6 +44,7 @@
         <li><a href="#operators">Operators</a></li>
         <li><a href="#logic">True and false</a></li>
         <li><a href="#je">je / nahi_ta</a></li>
+        <li><a href="#vekh">vekh / jeh</a></li>
         <li><a href="#loops">jad_tak</a></li>
         <li><a href="#functions">kaam / wapas</a></li>
         <li><a href="#scope">Scope</a></li>
@@ -133,7 +134,7 @@ je khali { dasso "never" } nahi_ta { dasso "khali is false" }
 
     <section class="demo" id="je">
         <h2><code>je</code> / <code>nahi_ta</code></h2>
-        <p>If and else. Pun has no <em>else if</em>: put a <code>je</code> inside <code>nahi_ta</code>.</p>
+        <p>If and else. Pun has no <em>else if</em>: put a <code>je</code> inside <code>nahi_ta</code>. To compare one value with several choices, use <a href="#vekh"><code>vekh</code></a>.</p>
         <div class="demo-row">
 <pre class="code">har_ik amount vich soochi(1250, 640, 180) {
     dasso amount + ": "
@@ -162,6 +163,45 @@ har_ik amount vich soochi(1250, 640, 180) {
         }
         nahi_ta {
             dasso "thank you"
+        }
+    }
+    dasso "\n"
+}
+?></pre></div>
+        </div>
+    </section>
+
+    <section class="demo" id="vekh">
+        <h2><code>vekh</code> / <code>jeh</code></h2>
+        <p>Switch and case. <code>vekh</code> works out its value once and compares it with each <code>jeh</code> using <code>==</code>. Only the first match runs, so there's no <code>break</code>, and <code>nahi_ta</code> catches everything else.</p>
+        <div class="demo-row">
+<pre class="code">har_ik drink vich soochi("chaa", "lassi", "coffee") {
+    dasso drink + ": "
+    vekh drink {
+        jeh "chaa" {
+            dasso "Chaa le aao!"
+        }
+        jeh "lassi" {
+            dasso "Vadda glass le aao!"
+        }
+        nahi_ta {
+            dasso "Paani hi de deo!"
+        }
+    }
+    dasso "\n"
+}</pre>
+            <div class="out"><small>Output</small><pre><?pun
+har_ik drink vich soochi("chaa", "lassi", "coffee") {
+    dasso drink + ": "
+    vekh drink {
+        jeh "chaa" {
+            dasso "Chaa le aao!"
+        }
+        jeh "lassi" {
+            dasso "Vadda glass le aao!"
+        }
+        nahi_ta {
+            dasso "Paani hi de deo!"
         }
     }
     dasso "\n"

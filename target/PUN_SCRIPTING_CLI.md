@@ -213,6 +213,18 @@ pun> je sach {
 ok
 ```
 
+`vekh` blocks work the same way in the REPL:
+
+```text
+pun> drink = "lassi"
+pun> vekh drink {
+...>     jeh "chaa" { dasso "Chaa le aao!" }
+...>     jeh "lassi" { dasso "Vadda glass le aao!" }
+...>     nahi_ta { dasso "Paani hi de deo!" }
+...> }
+Vadda glass le aao!
+```
+
 REPL commands:
 
 ```text

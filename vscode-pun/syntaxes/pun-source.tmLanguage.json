@@ -64,7 +64,7 @@
     },
     "keywords": {
       "patterns": [
-        { "name": "keyword.control.pun", "match": "\\b(je|nahi_ta|jad_tak|har_ik|vich|wapas)\\b" },
+        { "name": "keyword.control.pun", "match": "\\b(je|nahi_ta|vekh|jeh|jad_tak|har_ik|vich|wapas)\\b" },
         { "name": "storage.type.function.pun", "match": "\\bkaam\\b" },
         { "name": "support.function.construct.output.pun", "match": "\\bdasso\\b" },
         { "name": "keyword.other.reserved.pun", "match": "\\bnava\\b" }

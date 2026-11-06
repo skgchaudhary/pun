@@ -69,6 +69,8 @@ Output:
 | --- | --- |
 | `je` | if |
 | `nahi_ta` | else |
+| `vekh` | switch |
+| `jeh` | case |
 | `jad_tak` | while |
 | `kaam` | function |
 | `wapas` | return |
@@ -274,6 +276,27 @@ je naam == "Suneet" {
     }
 }
 ```
+
+## Switch Cases
+
+Use `vekh` to evaluate a value once and compare it with each `jeh` expression using `==`. The first matching branch runs, without fallthrough. A final `nahi_ta` block is optional and runs when no case matches. Each branch has its own block scope.
+
+```pun
+drink = "lassi"
+vekh drink {
+    jeh "chaa" {
+        dasso "Chaa le aao!"
+    }
+    jeh "lassi" {
+        dasso "Vadda glass le aao!"
+    }
+    nahi_ta {
+        dasso "Paani hi de deo!"
+    }
+}
+```
+
+`vekh` requires at least one `jeh`. Put `nahi_ta` last, if present. Case expressions are evaluated in order until a match is found.
 
 ## While Loops
 
