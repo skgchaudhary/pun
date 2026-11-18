@@ -1,6 +1,6 @@
 # Pun Scripting Server
 
-Design notes for **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+Design notes for **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
 
 This document describes a future Language Server Protocol implementation for Pun scripting. It is a design and implementation guide, not a completed feature.
 
@@ -475,3 +475,17 @@ java -jar pun-server.jar lsp
 - Should diagnostics include warnings for unused variables?
 - Should language server logs default to stderr or a configurable log file?
 - Should `check` and `lsp` share one analyzer API from the start?
+# Compiled app mounts
+
+At startup the server finds subfolders containing a `.pind` file and mounts
+each at its folder path. A request for the mount
+without a trailing slash redirects to the slash form, preserving its query.
+Routes in the embedded `.raah.json` map app-relative URLs to logical `.pun`
+page IDs in the bundle manifest. Only assets registered in the manifest are
+served. `.pind`, `.ghar`,
+and `.raah.json` files are never served directly. Invalid bundles are logged
+while source apps and healthy compiled mounts continue to work.
+
+With a reverse proxy or separate static server, forward protected requests to
+Pun Server or use a public-assets directory that excludes deployment internals.
+

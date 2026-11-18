@@ -189,9 +189,10 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani!</span>
+            <span class="eyebrow">PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede"><strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language. Write ordinary HTML, drop in <code>&lt;?pun &hellip; ?&gt;</code> blocks with keywords like <code>je</code>, <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.</p>
+            <p class="note"><strong>New in PUN 3.0.0:</strong> compile a whole site into one <code>.pind</code> bundle from the command line with <code>java -jar target/pun-server.jar build ./my-site</code>, then deploy just that file. <a href="#pind">How compiled apps work</a></p>
             <div class="buttons">
                 <a class="primary" href="#run">Run Pun Server</a>
                 <a href="#language">Language reference</a>
@@ -223,6 +224,7 @@ dasso "&lt;p&gt;Sat Sri Akal " + naam + "&lt;/p&gt;"
             <li><a href="#run">Run Pun Server: desktop app</a></li>
             <li><a href="#cli">Run Pun Server: command line</a></li>
             <li><a href="#repl">The REPL</a></li>
+            <li><a href="#pind">Compiled apps (.pind)</a></li>
             <li><a href="#language">Script blocks</a></li>
             <li><a href="#keywords">Keywords</a></li>
             <li><a href="#values">Values and printing</a></li>
@@ -278,17 +280,18 @@ cd pun</pre></li>
                     <li><strong>Click <kbd>Start Server</kbd>.</strong> Status changes to <code>RUNNING</code> and the URL appears, for example <code>http://localhost:8080</code>.</li>
                     <li><strong>Click <kbd>Open Browser</kbd></strong> to open the site. Every request is listed in the log at the bottom of the window.</li>
                     <li><strong>Click <kbd>Stop Server</kbd></strong> when you're done.</li>
+                    <li><strong>Optional: click <kbd>Build PIND</kbd></strong> to compile a site. Pick the source folder, then the output folder. The log and a dialog show where the <code>.pind</code> was written (see <a href="#pind">compiled apps</a>).</li>
                 </ol>
                 <p class="muted">If double-clicking opens the JAR as a ZIP file, Java isn't set up to open <code>.jar</code> files. Use the <code>java -jar</code> command instead.</p>
             </div>
-            <div class="window" role="img" aria-label="Drawing of the Pun Server Manager window: Project Folder with a Browse button, Port, Start Server, Stop Server and Open Browser buttons, status, URL and a request log">
-                <div class="bar"><img src="pun_logo.png" alt="">Pun Server Manager - Pun 2.0.0 - Gall Punjabi, Chaal Toofani!</div>
+            <div class="window" role="img" aria-label="Drawing of the Pun Server Manager window: Project Folder with a Browse button, Port, Start Server, Stop Server, Open Browser and Build PIND buttons, status, URL and a request log">
+                <div class="bar"><img src="pun_logo.png" alt="">Pun Server Manager - PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.</div>
                 <div class="body">
                     <label>Project Folder</label>
                     <div class="field"><span class="input">&hellip;\pun\chowk</span><span class="btn">Browse</span></div>
                     <label>Port</label>
                     <div class="field"><span class="input">8080</span></div>
-                    <div class="field"><span class="btn off">Start Server</span><span class="btn">Stop Server</span><span class="btn">Open Browser</span></div>
+                    <div class="field"><span class="btn off">Start Server</span><span class="btn">Stop Server</span><span class="btn">Open Browser</span><span class="btn">Build PIND</span></div>
                     <div><strong>Status: RUNNING</strong></div>
                     <div><strong>URL: http://localhost:8080</strong></div>
                     <div class="log">GET /<br>GET /sample_site/dashboard.pun<br>GET /sample_site/backend.pun?action=menu</div>
@@ -306,6 +309,8 @@ cd pun</pre></li>
                     <tr><td><code>java -jar target/pun-server.jar serve ./my-site</code></td><td>Serves another folder</td></tr>
                     <tr><td><code>java -jar target/pun-server.jar serve ./my-site --port 9000</code></td><td>Uses another port (short form: <code>-p 9000</code>)</td></tr>
                     <tr><td><code>java -jar target/pun-server.jar repl</code></td><td>Opens the interactive Pun prompt</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar build ./my-site</code></td><td>Compiles a site into <code>./my-site_pind/my-site.pind</code> (see <a href="#pind">compiled apps</a>)</td></tr>
+                    <tr><td><code>java -jar target/pun-server.jar build ./my-site --out ./dist</code></td><td>Writes the bundle to another folder</td></tr>
                     <tr><td><code>java -jar target/pun-server.jar help</code></td><td>Lists the commands</td></tr>
                     <tr><td><code>java -jar target/pun-server.jar version</code></td><td>Prints the version</td></tr>
                 </tbody>
@@ -330,6 +335,29 @@ pun&gt; je sach {
 ok
 pun&gt; :quit</pre>
         <p>REPL commands: <code>:help</code>, <code>:quit</code>, <code>:exit</code>.</p>
+
+        <h3 id="pind">Compiled apps: <code>build</code> and <code>.pind</code></h3>
+        <p>New in PUN 3.0.0. <code>build</code> compiles a site folder into one <code>.pind</code> bundle in a separate folder. The source folder isn't changed, and the bundle holds compiled pages instead of <code>.pun</code> source.</p>
+<pre class="code">java -jar target/pun-server.jar build chowk/sample_site
+// Built 7 pages and 3 assets
+// Bundle: &hellip;\chowk\sample_site_pind\sample_site.pind
+// Source routes (created): &hellip;\chowk\sample_site\sample_site.raah.json</pre>
+        <ul>
+            <li>The output goes to <code>&lt;folder&gt;_pind</code> beside the source unless you pass <code>--out &lt;folder&gt;</code>.</li>
+            <li>URLs come from a route file in the source folder named after it, here <code>sample_site.raah.json</code>. The first build creates it with a route for every <code>.pun</code> page, plus <code>/</code> for <code>index.pun</code>. Later builds reuse it, so edit it to change URLs. Without an <code>index.pun</code>, add a <code>/</code> route yourself.</li>
+            <li><code>--alias /dashboard=dashboard.pun</code> adds a clean URL on the first build only. Later, add it to the route file instead; a new alias on a rebuild stops the build. In Git Bash on Windows, put <code>MSYS_NO_PATHCONV=1</code> before the command, or Git Bash turns <code>/dashboard</code> into a Windows path.</li>
+            <li>A route to a missing page, or two routes that conflict, stop the build.</li>
+        </ul>
+<pre class="code">{
+  "version": 1,
+  "routes": {
+    "/": "index.pun",
+    "/dashboard.pun": "dashboard.pun",
+    "/dashboard": "dashboard.pun"
+  }
+}</pre>
+        <p>When it starts, Pun Server mounts every subfolder that holds a <code>.pind</code> at that folder's path. So <code>serve chowk</code> runs the source app at <code>/sample_site/</code> and the compiled one at <code>/sample_site_pind/</code> on the same port. A compiled app answers only the URLs in its routes and the assets in the bundle; <code>.pind</code>, <code>.ghar</code>, <code>.raah.json</code> and <code>META-INF</code> files are never sent. To deploy, copy just the <code>.pind</code> into its folder, and restart the server after a rebuild to load the new bundle. Behind a reverse proxy or a separate static file server, pass those files to Pun Server or serve static files from a folder that doesn't contain them.</p>
+        <div class="note"><strong>Passwords end up in the bundle.</strong> <code>build</code> compiles every <code>.pun</code> page in the folder, including pages with no route, and text such as database passwords stays readable inside the <code>.pind</code>. Treat a bundle like its source: don't commit or share one built from a folder whose pages hold secrets. This repository git-ignores <code>*.pind</code> for that reason.</div>
     </div>
 </section>
 
@@ -603,7 +631,7 @@ db.band()                                    // close the connection</pre>
         <div class="grid2">
             <div class="card">
                 <h3>Pages and files</h3>
-                <p><code>.pun</code> files are run by Pun. <code>.html</code>, <code>.css</code>, <code>.js</code>, <code>.json</code>, <code>.txt</code>, <code>.png</code>, <code>.jpg</code>, <code>.gif</code>, <code>.svg</code> and <code>.ico</code> are sent as they are. A folder serves its <code>index.pun</code>. Paths outside the website folder are refused.</p>
+                <p><code>.pun</code> files are run by Pun. <code>.html</code>, <code>.css</code>, <code>.js</code>, <code>.json</code>, <code>.txt</code>, <code>.png</code>, <code>.jpg</code>, <code>.gif</code>, <code>.svg</code> and <code>.ico</code> are sent as they are. A folder serves its <code>index.pun</code>. Paths outside the website folder are refused. <code>.pind</code>, <code>.ghar</code>, <code>.raah.json</code> and <code>META-INF</code> files are never sent.</p>
             </div>
             <div class="card">
                 <h3>Errors</h3>
@@ -663,9 +691,9 @@ code --install-extension pun-language-0.0.1.vsix</pre>
                 <p>The Markdown docs ship with the JAR in <code>target/</code>:</p>
                 <ul>
                     <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SCRIPTING.md">PUN_SCRIPTING.md</a>: the language</li>
-                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SCRIPTING_CLI.md">PUN_SCRIPTING_CLI.md</a>: command line and REPL</li>
-                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SERVER_MANAGE.md">PUN_SERVER_MANAGE.md</a>: running and managing the server</li>
-                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/README.md">README.md</a>: overview and architecture</li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SCRIPTING_CLI.md">PUN_SCRIPTING_CLI.md</a>: command line, REPL and <code>build</code></li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/PUN_SERVER_MANAGE.md">PUN_SERVER_MANAGE.md</a>: running the server and building <code>.pind</code> apps</li>
+                    <li><a href="https://github.com/skgchaudhary/pun/blob/main/target/README.md">README.md</a>: overview, compiled apps and architecture</li>
                 </ul>
             </div>
         </div>
@@ -740,7 +768,7 @@ db.band()</pre>
                 <ul>
                     <li>The language: PHP-style <code>&lt;?pun ?&gt;</code> blocks with Punjabi keywords such as <code>je</code>, <code>kaam</code> and <code>dasso</code></li>
                     <li>The engine: lexer, parser, interpreter and template engine</li>
-                    <li>Pun Server: the web server, MySQL support through <code>bhandar</code>, the command line and REPL, and the Pun Server Manager desktop app</li>
+                    <li>Pun Server: the web server, MySQL support through <code>bhandar</code>, compiled <code>.pind</code> apps, the command line and REPL, and the Pun Server Manager desktop app</li>
                 </ul>
             </div>
             <div class="card">
@@ -761,7 +789,7 @@ db.band()</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani! &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>
 </footer>

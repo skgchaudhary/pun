@@ -6,3 +6,11 @@ target/*
 # Local secrets: never commit these. Copy the .example files instead.
 .env
 chowk/sample_site/members.pun
+
+# Compiled app bundles: a build compiles every .pun page in the folder,
+# string literals included, so a .pind built from sample_site carries the
+# credentials from members.pun. Build locally; never commit the bundle.
+*.pind
+# Generated routes for sample_site point at the git-ignored members.pun,
+# which makes the build fail on a fresh clone. Each clone generates its own.
+chowk/sample_site/sample_site.raah.json

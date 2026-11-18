@@ -1,8 +1,21 @@
 # Pun Server Management
 
-Applies to **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+Applies to **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
 
 This document covers how to start and manage the Pun web server from the command line and from the desktop GUI.
+
+## Build and deploy a compiled app
+
+Run `java -jar target/pun-server.jar build chowk/sample_site --out chowk/sample_site_pind`.
+The editable routes live at `chowk/sample_site/sample_site.raah.json`; the build
+creates this file if absent and reuses it on later builds. Deploy only
+`chowk/sample_site_pind/sample_site.pind`. Starting `serve chowk` serves both
+`/sample_site/` and `/sample_site_pind/` on the same port.
+
+In the GUI, choose **Build PIND**, pick the source folder, then pick the output
+folder. The result shows whether the source routes were created or reused and
+where the `.pind` was written. The existing Project Folder and Start/Stop
+controls serve source and compiled apps together.
 
 ## Prerequisites
 

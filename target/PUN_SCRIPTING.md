@@ -1,6 +1,6 @@
 # Pun Scripting Documentation
 
-Applies to **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+Applies to **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
 
 Pun is a small PHP-style server-side scripting system that runs inside `.pun` files. A `.pun` file can contain normal HTML plus backend script blocks.
 

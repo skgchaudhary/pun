@@ -1,6 +1,6 @@
 # Pun Server
 
-**Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+**PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
 
 Pun Server is a Java 21 desktop application and embedded web server for a small PHP-like server-side scripting language named Pun. Pun files use the `.pun` extension and mix normal HTML with backend script blocks:
 
@@ -40,6 +40,51 @@ java -jar target/pun-server.jar
 This opens the Pun Server desktop GUI. It defaults to a `chowk` website folder beside the server output folder and creates it if needed. Choose another website folder to override the default, choose a port, start the server, and open `http://localhost:PORT/`.
 
 ## Run CLI Mode
+
+### Build and serve a compiled app
+
+Build a source app into a separate folder (the source folder is not changed):
+
+```bash
+java -jar target/pun-server.jar build chowk/sample_site
+# creates chowk/sample_site/sample_site.raah.json if missing
+# writes chowk/sample_site_pind/sample_site.pind
+```
+
+Use `--out <folder>` to choose another output folder. On the first build, use
+`--alias /dashboard=dashboard.pun` to add a clean route. Edit the generated
+source `.raah.json` for later changes. The build preserves an existing source
+controller and fails for missing pages or conflicting routes. Each `.pun` URL
+is included in a generated controller; `/` points to `index.pun` when present.
+Without `index.pun`, add an explicit `/` mapping to the source controller.
+
+The route controller is JSON with `version`, `bundle`, and `routes` fields:
+
+```json
+{
+  "version": 1,
+  "routes": {
+    "/": "index.pun",
+    "/dashboard.pun": "dashboard.pun",
+    "/dashboard": "dashboard.pun"
+  }
+}
+```
+
+The server discovers `.pind` files in subfolders beneath the document root at startup.
+For example, `serve chowk` serves source `/sample_site/` and compiled
+`/sample_site_pind/` on the same port. Deploy only `sample_site.pind` in the
+compiled folder. Its route controller is embedded as private metadata.
+`.pind`, `.raah.json`, and `.ghar` files are not downloadable. Rebuild and restart
+the server to load a changed bundle.
+
+When using a reverse proxy or separate static server, forward requests for
+deployment internals to Pun Server or serve from a public-assets directory
+that excludes `.pind`, `.ghar`, `.raah.json`, and `META-INF` files.
+
+In the GUI, choose **Build PIND**, select the source folder, then select the
+output folder. The result appears in the log and a dialog. Use the existing
+Project Folder picker and **Start Server** to serve the parent document root.
 
 Serve the default `chowk` folder on port `8080`:
 

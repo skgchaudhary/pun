@@ -138,6 +138,12 @@ h3 { font-size: 1.1rem; }
     border: 1px solid var(--line); border-left: 4px solid var(--kesri); border-radius: var(--radius);
 }
 .greeting .hello { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.whatsnew {
+    margin: 18px 0 0; padding: 12px 16px; border: 1px dashed var(--kesri); border-radius: var(--radius);
+    background: var(--kesri-soft); font-size: .95rem;
+}
+.whatsnew strong { color: var(--kesri); }
+.whatsnew code { white-space: normal; }
 .greeting .hello .pa { color: var(--kesri); }
 .greeting p { margin: 6px 0 12px; color: var(--muted); font-size: .92rem; }
 form.naam { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -310,13 +316,17 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani!</span>
+            <span class="eyebrow">PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede">
                 <strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language.
                 Write ordinary HTML, drop in
                 <code>&lt;?pun &hellip; ?&gt;</code> blocks using keywords like <code>je</code>,
                 <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.
+            </p>
+            <p class="whatsnew">
+                <strong>New in PUN 3.0.0:</strong> compile a whole site into one <code>.pind</code> bundle from the command line with
+                <code>java -jar target/pun-server.jar build chowk/sample_site</code>, then deploy just that file. <a href="#chalao">Run it</a>
             </p>
 
             <div class="greeting">
@@ -753,6 +763,7 @@ db.band()</pre>
                     <li><code>serve</code> for the default <code>chowk</code> folder or a custom one</li>
                     <li><code>--port</code> / <code>-p</code>, and how URLs map to files</li>
                     <li><code>repl</code> with multi-line blocks, <code>:help</code>, <code>:quit</code></li>
+                    <li><code>build</code> for compiled <code>.pind</code> apps, with <code>--out</code> and <code>--alias</code></li>
                     <li><code>help</code>, <code>version</code>, exit codes 0 / 1 / 2</li>
                 </ul>
             </article>
@@ -761,11 +772,12 @@ db.band()</pre>
                 <span class="tag">Operations</span>
                 <h3>Pun Server Management</h3>
                 <p class="path">target/PUN_SERVER_MANAGE.md</p>
-                <p>Starting, testing and stopping Pun Server, either from the CLI or from the Punjabi Server Manager desktop GUI.</p>
+                <p>Starting, testing and stopping Pun Server, either from the CLI or from the Pun Server Manager desktop GUI, and building compiled apps.</p>
                 <ul>
                     <li>Linux and Windows start and stop commands</li>
                     <li>Testing with <code>curl</code> and reaching the server from another machine</li>
                     <li>Step-by-step use of the desktop GUI</li>
+                    <li>Building and deploying a compiled <code>.pind</code> app, from the CLI or with <strong>Build PIND</strong></li>
                     <li>When to pick the GUI and when to pick the CLI (SSH, Docker, services)</li>
                 </ul>
             </article>
@@ -785,7 +797,7 @@ db.band()</pre>
         </div>
 
         <p class="docs-note">
-            Also see <code>target/README.md</code> for the project overview: building with Maven, the GUI, CLI and REPL modes, caching and memory limits, the architecture and the roadmap.
+            Also see <code>target/README.md</code> for the project overview: building with Maven, the GUI, CLI and REPL modes, compiled <code>.pind</code> apps and their route files, caching and memory limits, the architecture and the roadmap.
             Pun Server only serves files inside the website folder, so open these docs in your editor or repository browser.
         </p>
     </div>
@@ -807,6 +819,9 @@ java -jar target/pun-server.jar serve ./my-site -p <span class="n">9000</span>
 <span class="c"># try Pun interactively</span>
 java -jar target/pun-server.jar repl
 
+<span class="c"># compile a site into a .pind bundle</span>
+java -jar target/pun-server.jar build chowk/sample_site
+
 <span class="c"># open the desktop GUI</span>
 java -jar target/pun-server.jar</pre>
             </div>
@@ -814,6 +829,7 @@ java -jar target/pun-server.jar</pre>
                 <li><code>GET /</code> serves <code>index.pun</code> (this page).</li>
                 <li><code>GET /form.pun</code> runs <code>form.pun</code>.</li>
                 <li><code>GET /sample_site/</code> serves the sample site's <code>index.pun</code>.</li>
+                <li><code>GET /sample_site_pind/</code> serves the compiled copy, once you've built it and restarted the server.</li>
                 <li>Static <code>.html</code>, <code>.css</code>, <code>.js</code>, <code>.json</code>, <code>.txt</code> and image files are served as they are.</li>
                 <li>If <code>chowk</code> doesn't exist, Pun Server creates it next to the folder that holds the JAR.</li>
                 <li>Stop the server with <code>Ctrl+C</code>.</li>
@@ -852,7 +868,7 @@ java -jar target/pun-server.jar</pre>
                 <ul>
                     <li>The language: PHP-style <code>&lt;?pun ?&gt;</code> blocks with Punjabi keywords such as <code>je</code>, <code>kaam</code> and <code>dasso</code></li>
                     <li>The engine: lexer, parser, interpreter and template engine</li>
-                    <li>Pun Server: the web server, MySQL support through <code>bhandar</code>, the command line and REPL, and the Pun Server Manager desktop app</li>
+                    <li>Pun Server: the web server, MySQL support through <code>bhandar</code>, compiled <code>.pind</code> apps, the command line and REPL, and the Pun Server Manager desktop app</li>
                 </ul>
             </article>
             <article class="doc">
@@ -873,7 +889,7 @@ java -jar target/pun-server.jar</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>Pun 2.0.0 &middot; Gall Punjabi, Chaal Toofani! &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>This page is <code>index.pun</code>, rendered by Pun Server for <?pun dasso mang.method + " " + mang.path ?></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>

@@ -1,6 +1,6 @@
 # Pun Scripting CLI
 
-Applies to **Pun 2.0.0 — Gall Punjabi, Chaal Toofani!**
+Applies to **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
 
 This document covers running Pun from the command line.
 
@@ -292,3 +292,13 @@ java -jar target/pun-server.jar serve ./examples/database
 The database example expects a local MySQL database named `pun_test` and a
 `users` table. Pun database access uses prepared statements through
 `bhandar()`, `db.taiyar()`, and `stmt.mull()`.
+# Compiled applications
+
+Use `java -jar pun-server.jar build <source-folder>` to create a separate
+`<source-folder>_pind` folder. `--out <folder>` selects another output folder;
+`--alias /clean-url=page.pun` adds a clean route on first build. Edit the
+`<app-name>.raah.json` controller in the source folder for later changes. The
+build embeds that controller in the compressed `.pind` and deploys only the
+`.pind`; it never copies `.pun` source into the bundle. Serve the common parent
+folder with the existing `serve` command to run source and compiled apps together.
+
