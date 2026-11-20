@@ -1,0 +1,931 @@
+<?pun
+/*
+  sample_dsa/index.pun: a data structures and algorithms efficiency lab,
+  served for /sample_dsa/ (source) and /sample_dsa_pind/ (compiled .pind).
+
+  Pun has no clock, so every run counts its own work: comparisons, writes
+  (stores into a list, map or flag table) and function calls. The PHP twin in
+  projects/php/sample_dsa/public/index.php runs the same algorithms on the same
+  seeded input with the same counters, so the counts must match exactly. The
+  wall time of each page is measured from outside, over HTTP.
+
+  Views:
+    ?group=sort&n=1000   every algorithm of one group at one size
+    ?algo=merge          one algorithm across its whole size ladder
+    ?algo=merge&n=1000   one algorithm at one size
+    ...&r=20             repeat that single run 20 times (the benchmark uses
+                         this so quick algorithms do enough work to time)
+    ?algo=noop           the page without any run (the benchmark baseline)
+
+  Naming rule: page-level variables start with pg_. Inside a kaam, assigning
+  to a name that already exists at page level updates the page variable, so
+  function locals (i, j, a, n, ...) must never appear at page level.
+*/
+
+// ---------- counters and a seeded random generator ----------
+
+ops = shabdkosh("cmp": 0, "writes": 0, "calls": 0)
+rng = shabdkosh("x": 1)
+
+kaam reset_ops() {
+    ops["cmp"] = 0
+    ops["writes"] = 0
+    ops["calls"] = 0
+}
+
+// Park-Miller "minimal standard" generator. 16807 * x stays below 2^53, so
+// Pun's doubles and PHP's integers produce exactly the same sequence.
+kaam reset_rng() {
+    rng["x"] = 20261120
+}
+
+kaam agla() {
+    rng["x"] = 16807 * rng["x"] % 2147483647
+    wapas rng["x"]
+}
+
+kaam random_list(n) {
+    out = soochi()
+    i = 0
+    jad_tak i < n {
+        out.jodo(agla() % 100000)
+        i = i + 1
+    }
+    wapas out
+}
+
+kaam sorted_list(n) {
+    out = soochi()
+    i = 0
+    jad_tak i < n {
+        out.jodo(3 * i + 1)
+        i = i + 1
+    }
+    wapas out
+}
+
+// ---------- sorting: every sorter works in place on a soochi ----------
+
+kaam bubble_sort(a) {
+    n = a.ginti()
+    i = 0
+    j = 0
+    tmp = 0
+    badla = sach
+    jad_tak i < n - 1 && badla {
+        badla = jhooth
+        j = 0
+        jad_tak j < n - 1 - i {
+            ops["cmp"] = ops["cmp"] + 1
+            je a[j] > a[j + 1] {
+                tmp = a[j]
+                a[j] = a[j + 1]
+                a[j + 1] = tmp
+                ops["writes"] = ops["writes"] + 2
+                badla = sach
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+}
+
+kaam insertion_sort(a) {
+    n = a.ginti()
+    i = 1
+    j = 0
+    key = 0
+    chal = sach
+    jad_tak i < n {
+        key = a[i]
+        j = i - 1
+        chal = sach
+        jad_tak chal {
+            je j < 0 {
+                chal = jhooth
+            }
+            nahi_ta {
+                ops["cmp"] = ops["cmp"] + 1
+                je a[j] > key {
+                    a[j + 1] = a[j]
+                    ops["writes"] = ops["writes"] + 1
+                    j = j - 1
+                }
+                nahi_ta {
+                    chal = jhooth
+                }
+            }
+        }
+        a[j + 1] = key
+        ops["writes"] = ops["writes"] + 1
+        i = i + 1
+    }
+}
+
+kaam selection_sort(a) {
+    n = a.ginti()
+    i = 0
+    j = 0
+    min = 0
+    tmp = 0
+    jad_tak i < n - 1 {
+        min = i
+        j = i + 1
+        jad_tak j < n {
+            ops["cmp"] = ops["cmp"] + 1
+            je a[j] < a[min] {
+                min = j
+            }
+            j = j + 1
+        }
+        je min != i {
+            tmp = a[i]
+            a[i] = a[min]
+            a[min] = tmp
+            ops["writes"] = ops["writes"] + 2
+        }
+        i = i + 1
+    }
+}
+
+kaam merge_sort(a) {
+    aux = soochi()
+    i = 0
+    jad_tak i < a.ginti() {
+        aux.jodo(0)
+        i = i + 1
+    }
+    merge_part(a, aux, 0, a.ginti() - 1)
+}
+
+kaam merge_part(a, aux, lo, hi) {
+    ops["calls"] = ops["calls"] + 1
+    je lo >= hi {
+        wapas khali
+    }
+    mid = lo + (hi - lo - (hi - lo) % 2) / 2
+    merge_part(a, aux, lo, mid)
+    merge_part(a, aux, mid + 1, hi)
+    k = lo
+    jad_tak k <= hi {
+        aux[k] = a[k]
+        k = k + 1
+    }
+    ops["writes"] = ops["writes"] + (hi - lo + 1)
+    i = lo
+    j = mid + 1
+    k = lo
+    jad_tak k <= hi {
+        je i > mid {
+            a[k] = aux[j]
+            j = j + 1
+        }
+        nahi_ta {
+            je j > hi {
+                a[k] = aux[i]
+                i = i + 1
+            }
+            nahi_ta {
+                ops["cmp"] = ops["cmp"] + 1
+                je aux[j] < aux[i] {
+                    a[k] = aux[j]
+                    j = j + 1
+                }
+                nahi_ta {
+                    a[k] = aux[i]
+                    i = i + 1
+                }
+            }
+        }
+        ops["writes"] = ops["writes"] + 1
+        k = k + 1
+    }
+}
+
+kaam quick_sort(a) {
+    quick_part(a, 0, a.ginti() - 1)
+}
+
+// Hoare partition around the middle element.
+kaam quick_part(a, lo, hi) {
+    ops["calls"] = ops["calls"] + 1
+    je lo >= hi {
+        wapas khali
+    }
+    piv = a[lo + (hi - lo - (hi - lo) % 2) / 2]
+    i = lo
+    j = hi
+    tmp = 0
+    jad_tak i <= j {
+        ops["cmp"] = ops["cmp"] + 1
+        jad_tak a[i] < piv {
+            i = i + 1
+            ops["cmp"] = ops["cmp"] + 1
+        }
+        ops["cmp"] = ops["cmp"] + 1
+        jad_tak a[j] > piv {
+            j = j - 1
+            ops["cmp"] = ops["cmp"] + 1
+        }
+        je i <= j {
+            tmp = a[i]
+            a[i] = a[j]
+            a[j] = tmp
+            ops["writes"] = ops["writes"] + 2
+            i = i + 1
+            j = j - 1
+        }
+    }
+    quick_part(a, lo, j)
+    quick_part(a, i, hi)
+}
+
+kaam heap_sort(a) {
+    n = a.ginti()
+    i = (n - n % 2) / 2 - 1
+    tmp = 0
+    jad_tak i >= 0 {
+        sift_down(a, i, n)
+        i = i - 1
+    }
+    i = n - 1
+    jad_tak i > 0 {
+        tmp = a[0]
+        a[0] = a[i]
+        a[i] = tmp
+        ops["writes"] = ops["writes"] + 2
+        sift_down(a, 0, i)
+        i = i - 1
+    }
+}
+
+kaam sift_down(a, start, size) {
+    ops["calls"] = ops["calls"] + 1
+    root = start
+    child = 0
+    tmp = 0
+    chal = sach
+    jad_tak chal {
+        child = 2 * root + 1
+        je child >= size {
+            chal = jhooth
+        }
+        nahi_ta {
+            je child + 1 < size {
+                ops["cmp"] = ops["cmp"] + 1
+                je a[child + 1] > a[child] {
+                    child = child + 1
+                }
+            }
+            ops["cmp"] = ops["cmp"] + 1
+            je a[root] < a[child] {
+                tmp = a[root]
+                a[root] = a[child]
+                a[child] = tmp
+                ops["writes"] = ops["writes"] + 2
+                root = child
+            }
+            nahi_ta {
+                chal = jhooth
+            }
+        }
+    }
+}
+
+// ---------- searching: each finder answers every target, -1 for a miss ----------
+
+kaam linear_search(a, targets) {
+    found = soochi()
+    n = a.ginti()
+    i = 0
+    hit = -1
+    har_ik t vich targets {
+        i = 0
+        hit = -1
+        jad_tak hit < 0 && i < n {
+            ops["cmp"] = ops["cmp"] + 1
+            je a[i] == t {
+                hit = i
+            }
+            i = i + 1
+        }
+        found.jodo(hit)
+    }
+    wapas found
+}
+
+kaam binary_search(a, targets) {
+    found = soochi()
+    lo = 0
+    hi = 0
+    mid = 0
+    hit = -1
+    har_ik t vich targets {
+        lo = 0
+        hi = a.ginti() - 1
+        hit = -1
+        jad_tak hit < 0 && lo <= hi {
+            mid = lo + (hi - lo - (hi - lo) % 2) / 2
+            ops["cmp"] = ops["cmp"] + 1
+            je a[mid] == t {
+                hit = mid
+            }
+            nahi_ta {
+                ops["cmp"] = ops["cmp"] + 1
+                je a[mid] < t {
+                    lo = mid + 1
+                }
+                nahi_ta {
+                    hi = mid - 1
+                }
+            }
+        }
+        found.jodo(hit)
+    }
+    wapas found
+}
+
+kaam hash_search(a, targets) {
+    found = soochi()
+    index = shabdkosh()
+    n = a.ginti()
+    i = 0
+    key = ""
+    jad_tak i < n {
+        index["" + a[i]] = i
+        ops["writes"] = ops["writes"] + 1
+        i = i + 1
+    }
+    har_ik t vich targets {
+        key = "" + t
+        ops["cmp"] = ops["cmp"] + 1
+        je index.hai(key) {
+            found.jodo(index[key])
+        }
+        nahi_ta {
+            found.jodo(-1)
+        }
+    }
+    wapas found
+}
+
+// ---------- recursion and dynamic programming: Fibonacci ----------
+
+kaam fib_naive(k) {
+    ops["calls"] = ops["calls"] + 1
+    je k < 2 {
+        wapas k
+    }
+    wapas fib_naive(k - 1) + fib_naive(k - 2)
+}
+
+kaam fib_memo(k, memo) {
+    ops["calls"] = ops["calls"] + 1
+    je k < 2 {
+        wapas k
+    }
+    key = "" + k
+    ops["cmp"] = ops["cmp"] + 1
+    je memo.hai(key) {
+        wapas memo[key]
+    }
+    v = fib_memo(k - 1, memo) + fib_memo(k - 2, memo)
+    memo[key] = v
+    ops["writes"] = ops["writes"] + 1
+    wapas v
+}
+
+kaam fib_memo_start(k) {
+    wapas fib_memo(k, shabdkosh())
+}
+
+kaam fib_loop(k) {
+    x = 0
+    y = 1
+    tmp = 0
+    i = 0
+    jad_tak i < k {
+        tmp = x + y
+        x = y
+        y = tmp
+        ops["writes"] = ops["writes"] + 1
+        i = i + 1
+    }
+    wapas x
+}
+
+// ---------- primes: count the primes up to n ----------
+
+kaam trial_division(n) {
+    count = 0
+    m = 2
+    d = 0
+    is_p = sach
+    jad_tak m <= n {
+        d = 2
+        is_p = sach
+        jad_tak is_p && d * d <= m {
+            ops["cmp"] = ops["cmp"] + 1
+            je m % d == 0 {
+                is_p = jhooth
+            }
+            d = d + 1
+        }
+        je is_p {
+            count = count + 1
+        }
+        m = m + 1
+    }
+    wapas count
+}
+
+kaam sieve(n) {
+    flags = soochi()
+    i = 0
+    jad_tak i <= n {
+        flags.jodo(sach)
+        i = i + 1
+    }
+    ops["writes"] = ops["writes"] + n + 1
+    p = 2
+    m = 0
+    jad_tak p * p <= n {
+        ops["cmp"] = ops["cmp"] + 1
+        je flags[p] {
+            m = p * p
+            jad_tak m <= n {
+                flags[m] = jhooth
+                ops["writes"] = ops["writes"] + 1
+                m = m + p
+            }
+        }
+        p = p + 1
+    }
+    count = 0
+    i = 2
+    jad_tak i <= n {
+        ops["cmp"] = ops["cmp"] + 1
+        je flags[i] {
+            count = count + 1
+        }
+        i = i + 1
+    }
+    wapas count
+}
+
+// ---------- runners: build input, reset counters, run, verify ----------
+
+// Known answers for every ladder size, so checking costs nothing.
+fib_answers = shabdkosh("10": 55, "15": 610, "20": 6765, "25": 75025, "30": 832040)
+prime_answers = shabdkosh("1000": 168, "5000": 669, "10000": 1229, "50000": 5133)
+
+kaam finish(ok, check) {
+    wapas shabdkosh(
+        "cmp": ops["cmp"],
+        "writes": ops["writes"],
+        "calls": ops["calls"],
+        "total": ops["cmp"] + ops["writes"] + ops["calls"],
+        "ok": ok,
+        "check": check
+    )
+}
+
+kaam run_sort(algo_fn, n) {
+    reset_rng()
+    a = random_list(n)
+    reset_ops()
+    algo_fn(a)
+    ok = sach
+    check = 0
+    i = 0
+    jad_tak i < n {
+        je i > 0 && a[i - 1] > a[i] {
+            ok = jhooth
+        }
+        check = check + a[i] * (i + 1)
+        i = i + 1
+    }
+    wapas finish(ok, check)
+}
+
+kaam run_search(algo_fn, n) {
+    reset_rng()
+    a = sorted_list(n)
+    targets = soochi()
+    q = 0
+    jad_tak q < 100 {
+        targets.jodo(agla() % (3 * n))
+        q = q + 1
+    }
+    reset_ops()
+    found = algo_fn(a, targets)
+    ok = found.ginti() == 100
+    check = 0
+    hit = 0
+    q = 0
+    jad_tak ok && q < 100 {
+        hit = found[q]
+        je hit >= 0 {
+            je a[hit] != targets[q] {
+                ok = jhooth
+            }
+        }
+        nahi_ta {
+            je targets[q] % 3 == 1 {
+                ok = jhooth
+            }
+        }
+        check = check + hit + 1
+        q = q + 1
+    }
+    wapas finish(ok, check)
+}
+
+kaam run_number(algo_fn, n, answers) {
+    reset_ops()
+    v = algo_fn(n)
+    wapas finish(v == answers["" + n], v)
+}
+
+kaam run_algo(key, size) {
+    info = pg_algos[key]
+    res = khali
+    vekh info["group"] {
+        jeh "sort" {
+            res = run_sort(info["fn"], size)
+        }
+        jeh "search" {
+            res = run_search(info["fn"], size)
+        }
+        jeh "fib" {
+            res = run_number(info["fn"], size, fib_answers)
+        }
+        jeh "primes" {
+            res = run_number(info["fn"], size, prime_answers)
+        }
+    }
+    res["algo"] = key
+    res["n"] = size
+    wapas res
+}
+
+// ---------- formatting helpers ----------
+
+// 1234567 -> "1,234,567"
+kaam sohna(x) {
+    je x < 1000 {
+        wapas "" + x
+    }
+    tail = x % 1000
+    pad = ""
+    je tail < 100 {
+        pad = "0"
+    }
+    je tail < 10 {
+        pad = "00"
+    }
+    wapas sohna((x - tail) / 1000) + "," + pad + tail
+}
+
+// 2 decimals, rounded: 3.14159 -> "3.14"
+kaam do_dashamlav(x) {
+    sau = x * 100 + 0.5
+    sau = sau - sau % 1
+    baki = sau % 100
+    poore = (sau - baki) / 100
+    je baki < 10 {
+        wapas "" + poore + ".0" + baki
+    }
+    wapas "" + poore + "." + baki
+}
+
+kaam tick(ok) {
+    je ok {
+        wapas "<span class=\"ok\">&#10003;</span>"
+    }
+    wapas "<span class=\"bad\">&#10007;</span>"
+}
+
+kaam json_row(r) {
+    ok_text = "false"
+    je r["ok"] {
+        ok_text = "true"
+    }
+    wapas "{\"algo\":\"" + r["algo"] + "\",\"n\":" + r["n"]
+        + ",\"cmp\":" + r["cmp"] + ",\"writes\":" + r["writes"] + ",\"calls\":" + r["calls"]
+        + ",\"total\":" + r["total"] + ",\"check\":" + r["check"] + ",\"ok\":" + ok_text + "}"
+}
+
+// ---------- the catalogue ----------
+
+pg_algos = shabdkosh(
+    "bubble": shabdkosh("naam": "Bubble sort", "group": "sort", "big_o": "O(n&sup2;)", "fn": bubble_sort),
+    "insertion": shabdkosh("naam": "Insertion sort", "group": "sort", "big_o": "O(n&sup2;)", "fn": insertion_sort),
+    "selection": shabdkosh("naam": "Selection sort", "group": "sort", "big_o": "O(n&sup2;)", "fn": selection_sort),
+    "merge": shabdkosh("naam": "Merge sort", "group": "sort", "big_o": "O(n log n)", "fn": merge_sort),
+    "quick": shabdkosh("naam": "Quick sort", "group": "sort", "big_o": "O(n log n) avg", "fn": quick_sort),
+    "heap": shabdkosh("naam": "Heap sort", "group": "sort", "big_o": "O(n log n)", "fn": heap_sort),
+    "linear": shabdkosh("naam": "Linear search", "group": "search", "big_o": "O(n) per lookup", "fn": linear_search),
+    "binary": shabdkosh("naam": "Binary search", "group": "search", "big_o": "O(log n) per lookup", "fn": binary_search),
+    "hash": shabdkosh("naam": "Hash lookup (shabdkosh)", "group": "search", "big_o": "O(n) build, O(1) lookup", "fn": hash_search),
+    "fib_naive": shabdkosh("naam": "Fibonacci, plain recursion", "group": "fib", "big_o": "O(&phi;<sup>n</sup>)", "fn": fib_naive),
+    "fib_memo": shabdkosh("naam": "Fibonacci, memoized", "group": "fib", "big_o": "O(n)", "fn": fib_memo_start),
+    "fib_loop": shabdkosh("naam": "Fibonacci, loop", "group": "fib", "big_o": "O(n)", "fn": fib_loop),
+    "trial": shabdkosh("naam": "Trial division", "group": "primes", "big_o": "O(n &radic;n)", "fn": trial_division),
+    "sieve": shabdkosh("naam": "Sieve of Eratosthenes", "group": "primes", "big_o": "O(n log log n)", "fn": sieve)
+)
+
+pg_groups = shabdkosh(
+    "sort": shabdkosh("naam": "Sorting", "sizes": soochi(100, 500, 1000, 2000), "default": 500,
+        "unit": "n random numbers below 100,000, sorted in place"),
+    "search": shabdkosh("naam": "Searching", "sizes": soochi(1000, 5000, 10000, 20000), "default": 5000,
+        "unit": "n sorted numbers, 100 lookups (about a third are hits)"),
+    "fib": shabdkosh("naam": "Fibonacci", "sizes": soochi(10, 15, 20, 25, 30), "default": 20,
+        "unit": "compute the n-th Fibonacci number"),
+    "primes": shabdkosh("naam": "Primes", "sizes": soochi(1000, 5000, 10000, 50000), "default": 10000,
+        "unit": "count the primes up to n")
+)
+
+// ---------- request: pick a view ----------
+
+pg_algo_in = mang.GET["algo"]
+pg_group_in = mang.GET["group"]
+pg_n_in = mang.GET["n"]
+pg_r_in = mang.GET["r"]
+
+// ?r= repeats a single run so that quick algorithms do enough work to time.
+pg_repeats = soochi(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000)
+pg_repeat = 1
+
+pg_view = "group"
+pg_group = "sort"
+pg_algo = ""
+pg_size = 0
+pg_note = ""
+pg_sizes = khali
+
+je pg_algo_in != khali && pg_algo_in != "" {
+    je pg_algo_in == "noop" {
+        pg_view = "noop"
+    }
+    nahi_ta {
+        je pg_algos.hai(pg_algo_in) {
+            pg_algo = pg_algo_in
+            pg_group = pg_algos[pg_algo]["group"]
+            pg_view = "growth"
+        }
+        nahi_ta {
+            pg_view = "error"
+            pg_note = "There is no algorithm with that name."
+        }
+    }
+}
+nahi_ta {
+    je pg_group_in != khali && pg_group_in != "" {
+        je pg_groups.hai(pg_group_in) {
+            pg_group = pg_group_in
+        }
+        nahi_ta {
+            pg_view = "error"
+            pg_note = "There is no group with that name."
+        }
+    }
+}
+
+pg_sizes = pg_groups[pg_group]["sizes"]
+pg_size = pg_groups[pg_group]["default"]
+
+// "n" is a string; only sizes on the group's ladder are accepted.
+je pg_view != "error" && pg_view != "noop" && pg_n_in != khali && pg_n_in != "" {
+    pg_size = khali
+    har_ik s vich pg_sizes {
+        je "" + s == pg_n_in {
+            pg_size = s
+        }
+    }
+    je pg_size == khali {
+        pg_view = "error"
+        pg_note = "That size is not on this group's ladder."
+    }
+    nahi_ta {
+        je pg_view == "growth" {
+            pg_view = "single"
+        }
+    }
+}
+
+je pg_view != "error" && pg_r_in != khali && pg_r_in != "" {
+    pg_repeat = khali
+    har_ik x vich pg_repeats {
+        je "" + x == pg_r_in {
+            pg_repeat = x
+        }
+    }
+    je pg_repeat == khali {
+        pg_view = "error"
+        pg_note = "That repeat count is not allowed."
+    }
+}
+
+je pg_view == "error" {
+    jawab.status = 400
+}
+
+// ---------- run ----------
+
+pg_rows = soochi()
+vekh pg_view {
+    jeh "group" {
+        har_ik key, info vich pg_algos {
+            je info["group"] == pg_group {
+                pg_rows.jodo(run_algo(key, pg_size))
+            }
+        }
+    }
+    jeh "single" {
+        // Every repeat does identical work, so the last result stands for all.
+        pg_last = khali
+        pg_k = 0
+        jad_tak pg_k < pg_repeat {
+            pg_last = run_algo(pg_algo, pg_size)
+            pg_k = pg_k + 1
+        }
+        pg_rows.jodo(pg_last)
+    }
+    jeh "growth" {
+        har_ik s vich pg_sizes {
+            pg_rows.jodo(run_algo(pg_algo, s))
+        }
+    }
+}
+
+pg_max = 1
+har_ik r vich pg_rows {
+    je r["total"] > pg_max {
+        pg_max = r["total"]
+    }
+}
+
+pg_json = "{\"lang\":\"pun\",\"view\":\"" + pg_view + "\",\"r\":" + pg_repeat + ",\"results\":["
+pg_first = sach
+har_ik r vich pg_rows {
+    je !pg_first {
+        pg_json = pg_json + ","
+    }
+    pg_json = pg_json + json_row(r)
+    pg_first = jhooth
+}
+pg_json = pg_json + "]}"
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSA Efficiency Lab</title>
+<link rel="icon" type="image/png" href="/pun_logo.png">
+<style>
+  :root { --bg: #f6f7fb; --card: #ffffff; --ink: #1d2433; --muted: #5d6577; --accent: #4f46e5; --line: #e2e5ee; --bar: #a5b4fc; --ok: #15803d; --bad: #b91c1c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #12151c; --card: #1b1f29; --ink: #e8ebf3; --muted: #9aa3b5; --accent: #a5b4fc; --line: #2c3240; --bar: #6366f1; --ok: #4ade80; --bad: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0; font-size: 1.9rem; }
+  h2 { margin: 0 0 4px; font-size: 1.1rem; }
+  .sub { margin: 4px 0 24px; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .group { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .group.on { border-color: var(--accent); }
+  .group b { display: block; margin-bottom: 6px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; font-size: 0.85rem; }
+  .links a { padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: var(--accent); }
+  .links a.on { background: var(--accent); border-color: var(--accent); color: var(--card); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  td, th { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  tr:last-child td { border-bottom: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { width: 160px; }
+  .bar span { display: block; height: 10px; border-radius: 5px; background: var(--bar); min-width: 2px; }
+  .ok { color: var(--ok); font-weight: 700; }
+  .bad { color: var(--bad); font-weight: 700; }
+  .note { color: var(--muted); font-size: 0.9rem; margin: 8px 0 0; }
+  .err { color: var(--bad); font-weight: 600; }
+  a { color: var(--accent); }
+  code { font-size: 0.85em; }
+  ul { margin: 0; padding-left: 20px; }
+  footer { color: var(--muted); font-size: 0.85rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>DSA Efficiency Lab</h1>
+<p class="sub">Fourteen algorithms, counted step by step. Rendered by <b>Pun</b>.</p>
+
+<section>
+  <div class="groups">
+<?pun
+har_ik gkey, g vich pg_groups {
+    cls = "group"
+    je gkey == pg_group && pg_view != "noop" && pg_view != "error" {
+        cls = "group on"
+    }
+    dasso "<div class=\"" + cls + "\"><b>" + g["naam"] + "</b><div class=\"links\">"
+    har_ik s vich g["sizes"] {
+        lcls = ""
+        je pg_view == "group" && gkey == pg_group && s == pg_size {
+            lcls = " class=\"on\""
+        }
+        dasso "<a" + lcls + " href=\"?group=" + gkey + "&amp;n=" + s + "\">n=" + sohna(s) + "</a>"
+    }
+    dasso "</div><div class=\"links\">"
+    har_ik akey, info vich pg_algos {
+        je info["group"] == gkey {
+            lcls = ""
+            je akey == pg_algo {
+                lcls = " class=\"on\""
+            }
+            dasso "<a" + lcls + " href=\"?algo=" + akey + "\">" + info["naam"] + "</a>"
+        }
+    }
+    dasso "</div></div>\n"
+}
+?>
+  </div>
+  <p class="note">Size links run the whole group at that size. Algorithm links run one algorithm up its size ladder.</p>
+</section>
+
+<section>
+<?pun
+vekh pg_view {
+    jeh "error" {
+        dasso "<h2>Nothing to run</h2><p class=\"err\">" + pg_note + "</p><p><a href=\"?\">Back to the start</a></p>"
+    }
+    jeh "noop" {
+        dasso "<h2>Baseline</h2><p class=\"note\">No algorithm ran. The benchmark times this page to measure the cost of the request and the page itself.</p>"
+    }
+    jeh "growth" {
+        dasso "<h2>" + pg_algos[pg_algo]["naam"] + " <small>" + pg_algos[pg_algo]["big_o"] + "</small></h2>"
+        dasso "<p class=\"note\">" + pg_groups[pg_group]["unit"] + ". Each row multiplies n; the last column shows how the work grew.</p>"
+        dasso "<div class=\"scroll\"><table><tr><th class=\"num\">n</th><th class=\"num\">Comparisons</th><th class=\"num\">Writes</th><th class=\"num\">Calls</th><th class=\"num\">Total ops</th><th class=\"bar\"></th><th class=\"num\">n grew</th><th class=\"num\">ops grew</th><th>Check</th></tr>\n"
+        pg_prev = khali
+        har_ik r vich pg_rows {
+            n_grew = "&ndash;"
+            ops_grew = "&ndash;"
+            je pg_prev != khali {
+                n_grew = "&times;" + do_dashamlav(r["n"] / pg_prev["n"])
+                ops_grew = "&times;" + do_dashamlav(r["total"] / pg_prev["total"])
+            }
+            w = r["total"] * 100 / pg_max
+            w = w - w % 1
+            dasso "<tr><td class=\"num\">" + sohna(r["n"]) + "</td><td class=\"num\">" + sohna(r["cmp"]) + "</td><td class=\"num\">" + sohna(r["writes"])
+                + "</td><td class=\"num\">" + sohna(r["calls"]) + "</td><td class=\"num\"><b>" + sohna(r["total"]) + "</b></td><td class=\"bar\"><span style=\"width:" + w + "%\"></span></td><td class=\"num\">"
+                + n_grew + "</td><td class=\"num\">" + ops_grew + "</td><td>" + tick(r["ok"]) + "</td></tr>\n"
+            pg_prev = r
+        }
+        dasso "</table></div>"
+    }
+    nahi_ta {
+        dasso "<h2>" + pg_groups[pg_group]["naam"] + " at n = " + sohna(pg_size) + "</h2>"
+        dasso "<p class=\"note\">" + pg_groups[pg_group]["unit"] + "."
+        je pg_repeat > 1 {
+            dasso " Ran " + pg_repeat + " times; the counts are for one run."
+        }
+        dasso "</p>"
+        dasso "<div class=\"scroll\"><table><tr><th>Algorithm</th><th>Big-O</th><th class=\"num\">Comparisons</th><th class=\"num\">Writes</th><th class=\"num\">Calls</th><th class=\"num\">Total ops</th><th class=\"bar\"></th><th>Check</th></tr>\n"
+        har_ik r vich pg_rows {
+            w = r["total"] * 100 / pg_max
+            w = w - w % 1
+            dasso "<tr><td><a href=\"?algo=" + r["algo"] + "\">" + pg_algos[r["algo"]]["naam"] + "</a></td><td>" + pg_algos[r["algo"]]["big_o"]
+                + "</td><td class=\"num\">" + sohna(r["cmp"]) + "</td><td class=\"num\">" + sohna(r["writes"]) + "</td><td class=\"num\">" + sohna(r["calls"])
+                + "</td><td class=\"num\"><b>" + sohna(r["total"]) + "</b></td><td class=\"bar\"><span style=\"width:" + w + "%\"></span></td><td>" + tick(r["ok"]) + "</td></tr>\n"
+        }
+        dasso "</table></div>"
+    }
+}
+?>
+</section>
+
+<section>
+  <h2>How to read this</h2>
+  <ul>
+    <li><b>Comparisons</b>: element comparisons, lookups and divisibility tests.</li>
+    <li><b>Writes</b>: values stored into a list, map or flag table.</li>
+    <li><b>Calls</b>: recursive or helper calls (merge, quick, heap, Fibonacci).</li>
+    <li><b>Check</b>: the output was verified (sorted, every lookup right, or the known answer).</li>
+    <li>Every run starts from the same seeded input, so the counts are identical on every visit and in the PHP twin.</li>
+  </ul>
+</section>
+
+<script type="application/json" id="dsa-data"><?pun dasso pg_json ?></script>
+
+<footer>chowk/sample_dsa &middot; Pun has no clock, so this page counts work; the benchmark times it from outside.</footer>
+
+</main>
+</body>
+</html>

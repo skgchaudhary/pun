@@ -189,10 +189,10 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya</span>
+            <span class="eyebrow">PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede"><strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language. Write ordinary HTML, drop in <code>&lt;?pun &hellip; ?&gt;</code> blocks with keywords like <code>je</code>, <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.</p>
-            <p class="note"><strong>New in PUN 3.0.0:</strong> compile a whole site into one <code>.pind</code> bundle from the command line with <code>java -jar target/pun-server.jar build ./my-site</code>, then deploy just that file. <a href="#pind">How compiled apps work</a></p>
+            <p class="note"><strong>New in PUN 4.0.0:</strong> compiled <code>.pind</code> pages now run as JVM code, about 8.5 times faster than PUN 3.0.0. Compile a whole site into one <code>.pind</code> bundle with <code>java -jar target/pun-server.jar build ./my-site</code>, then deploy just that file. <a href="#pind">How compiled apps work</a></p>
             <div class="buttons">
                 <a class="primary" href="#run">Run Pun Server</a>
                 <a href="#language">Language reference</a>
@@ -285,7 +285,7 @@ cd pun</pre></li>
                 <p class="muted">If double-clicking opens the JAR as a ZIP file, Java isn't set up to open <code>.jar</code> files. Use the <code>java -jar</code> command instead.</p>
             </div>
             <div class="window" role="img" aria-label="Drawing of the Pun Server Manager window: Project Folder with a Browse button, Port, Start Server, Stop Server, Open Browser and Build PIND buttons, status, URL and a request log">
-                <div class="bar"><img src="pun_logo.png" alt="">Pun Server Manager - PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.</div>
+                <div class="bar"><img src="pun_logo.png" alt="">Pun Server Manager - PUN 4.0.0 — Hisaab Pakka, Chaal Tez! 🚀</div>
                 <div class="body">
                     <label>Project Folder</label>
                     <div class="field"><span class="input">&hellip;\pun\chowk</span><span class="btn">Browse</span></div>
@@ -337,7 +337,7 @@ pun&gt; :quit</pre>
         <p>REPL commands: <code>:help</code>, <code>:quit</code>, <code>:exit</code>.</p>
 
         <h3 id="pind">Compiled apps: <code>build</code> and <code>.pind</code></h3>
-        <p>New in PUN 3.0.0. <code>build</code> compiles a site folder into one <code>.pind</code> bundle in a separate folder. The source folder isn't changed, and the bundle holds compiled pages instead of <code>.pun</code> source.</p>
+        <p>Since PUN 3.0.0, <code>build</code> compiles a site folder into one <code>.pind</code> bundle in a separate folder. The source folder isn't changed, and the bundle holds compiled pages instead of <code>.pun</code> source.</p>
 <pre class="code">java -jar target/pun-server.jar build chowk/sample_site
 // Built 7 pages and 3 assets
 // Bundle: &hellip;\chowk\sample_site_pind\sample_site.pind
@@ -356,6 +356,7 @@ pun&gt; :quit</pre>
     "/dashboard": "dashboard.pun"
   }
 }</pre>
+        <p>New in PUN 4.0.0: when Pun Server mounts a bundle, it turns each compiled page into JVM code, which Java compiles to machine code as the page is used. Output and error messages are the same as running the source. On the sample_dsa benchmark a compiled page runs about 8.5 times faster than in PUN 3.0.0, and takes about 1.5 to 1.8 times as long as the same page in PHP 8.3 with OPcache.</p>
         <p>When it starts, Pun Server mounts every subfolder that holds a <code>.pind</code> at that folder's path. So <code>serve chowk</code> runs the source app at <code>/sample_site/</code> and the compiled one at <code>/sample_site_pind/</code> on the same port. A compiled app answers only the URLs in its routes and the assets in the bundle; <code>.pind</code>, <code>.ghar</code>, <code>.raah.json</code> and <code>META-INF</code> files are never sent. To deploy, copy just the <code>.pind</code> into its folder, and restart the server after a rebuild to load the new bundle. Behind a reverse proxy or a separate static file server, pass those files to Pun Server or serve static files from a folder that doesn't contain them.</p>
         <div class="note"><strong>Passwords end up in the bundle.</strong> <code>build</code> compiles every <code>.pun</code> page in the folder, including pages with no route, and text such as database passwords stays readable inside the <code>.pind</code>. Treat a bundle like its source: don't commit or share one built from a folder whose pages hold secrets. This repository git-ignores <code>*.pind</code> for that reason.</div>
     </div>
@@ -789,7 +790,7 @@ db.band()</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀 &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>
 </footer>

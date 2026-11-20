@@ -1,6 +1,6 @@
 # Pun Server
 
-**PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
+**PUN 4.0.0 — Hisaab Pakka, Chaal Tez! 🚀**
 
 Pun Server is a Java 21 desktop application and embedded web server for a small PHP-like server-side scripting language named Pun. Pun files use the `.pun` extension and mix normal HTML with backend script blocks:
 
@@ -11,7 +11,13 @@ dasso "<h1>Sat Sri Akal " + naam + "</h1>"
 ?>
 ```
 
-The MVP is intentionally small: it has a custom lexer, parser, AST, interpreter, template engine, Swing GUI, and Java built-in `HttpServer`. It does not translate Pun to Java and does not use Spring Boot, Gradle, or an external scripting engine.
+The MVP is intentionally small: it has a custom lexer, parser, AST, interpreter, instruction VM for compiled pages, template engine, Swing GUI, and Java built-in `HttpServer`. It does not translate Pun to Java and does not use Spring Boot, Gradle, or an external scripting engine.
+
+## Latest runtime development
+
+Block scopes now allocate their variable map only when they store a local variable. This reduces allocation in loops that read or update variables in an outer scope. The existing 10,000-iteration execution benchmark measured about 1,175 KiB per run before this change and 707 KiB per run afterward. Five post-change runs had a median of 0.924 ms; the single pre-change run was 0.972 ms, so a reliable speedup has not been established. The scope behavior is covered by a focused regression test, and the full test suite passed with one conditional integration test aborted.
+
+New in PUN 4.0.0: compiled pages run as JVM code. `build` writes each page of a `.pind` as `.ghar` version 2: the page compiled to stack-machine instructions with numbered variable slots, checked by a verifier when it is loaded. When the server mounts the bundle it translates each verified page into a JVM class, and the JVM compiles that to machine code as the page is used. Over HTTP, on the 13 sample_dsa workloads, a compiled page now takes 1.8 times as long as the same page in PHP 8.3 with OPcache (0.9 to 3.2 times by case); with PUN 3.0.0 it took 15 times as long. That is 8.5 times faster than 3.0.0 and 3.3 times faster than the instruction VM alone, with output and error messages identical to the interpreter. A unit too large for JVM code stays on the instruction VM. Version 1 `.ghar` files (serialized syntax trees, as written by PUN 3.0.0) still load and run on the interpreter, as do `.pun` source pages. See [performance measurements](benchmarks/RESULTS.md) for the test setup, where a request's time goes, and the limitations.
 
 ## Requirements
 
@@ -77,6 +83,13 @@ For example, `serve chowk` serves source `/sample_site/` and compiled
 compiled folder. Its route controller is embedded as private metadata.
 `.pind`, `.raah.json`, and `.ghar` files are not downloadable. Rebuild and restart
 the server to load a changed bundle.
+
+Pages are compiled to instructions (`.ghar` version 2), which the server turns into
+JVM code when it mounts the bundle: same output and errors as the interpreter, about
+8.5 times faster than PUN 3.0.0 on loops and calls (4 to 14 times by case), with
+much less allocation. Pages with a `kaam` nested in a block or another `kaam` stay
+on the interpreter (version 1). `build ... --ghar 1` writes only version 1, for
+servers that predate the VM. Version 1 bundles from earlier releases still load.
 
 When using a reverse proxy or separate static server, forward requests for
 deployment internals to Pun Server or serve from a public-assets directory

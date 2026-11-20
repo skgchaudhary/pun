@@ -316,7 +316,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <section>
     <div class="wrap hero">
         <div>
-            <span class="eyebrow">PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya</span>
+            <span class="eyebrow">PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀</span>
             <h1>Backend scripting that speaks Punjabi.</h1>
             <p class="lede">
                 <strong>PUNjabi Server-side Scripting</strong>, or Pun for short, is a small PHP-style language.
@@ -325,7 +325,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
                 <code>kaam</code> and <code>dasso</code>, and Pun Server sends back the rendered page.
             </p>
             <p class="whatsnew">
-                <strong>New in PUN 3.0.0:</strong> compile a whole site into one <code>.pind</code> bundle from the command line with
+                <strong>New in PUN 4.0.0:</strong> compiled <code>.pind</code> pages now run as JVM code, about 8.5 times faster than PUN 3.0.0.
+                Compile a whole site into one <code>.pind</code> bundle with
                 <code>java -jar target/pun-server.jar build chowk/sample_site</code>, then deploy just that file. <a href="#chalao">Run it</a>
             </p>
 
@@ -889,7 +890,7 @@ java -jar target/pun-server.jar</pre>
 <div class="phulkari" aria-hidden="true"></div>
 <footer>
     <div class="wrap">
-        <span>PUN 3.0.0 &middot; Ghar Ghar Judeya, Pind Baneya &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀 &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
         <span>This page is <code>index.pun</code>, rendered by Pun Server for <?pun dasso mang.method + " " + mang.path ?></span>
         <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
     </div>

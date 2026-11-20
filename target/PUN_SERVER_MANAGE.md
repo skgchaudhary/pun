@@ -1,6 +1,6 @@
 # Pun Server Management
 
-Applies to **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
+Applies to **PUN 4.0.0 — Hisaab Pakka, Chaal Tez! 🚀**
 
 This document covers how to start and manage the Pun web server from the command line and from the desktop GUI.
 

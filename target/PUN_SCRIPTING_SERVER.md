@@ -1,6 +1,6 @@
 # Pun Scripting Server
 
-Design notes for **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
+Design notes for **PUN 4.0.0 — Hisaab Pakka, Chaal Tez! 🚀**
 
 This document describes a future Language Server Protocol implementation for Pun scripting. It is a design and implementation guide, not a completed feature.
 
@@ -485,6 +485,50 @@ page IDs in the bundle manifest. Only assets registered in the manifest are
 served. `.pind`, `.ghar`,
 and `.raah.json` files are never served directly. Invalid bundles are logged
 while source apps and healthy compiled mounts continue to work.
+
+Pages built as `.ghar` version 2 run as JVM code: when a bundle is mounted, the
+server translates each page's compiled instructions into a JVM class, which the
+JVM then compiles to machine code as the page is used. The startup log shows the
+result for each bundle, for example:
+
+```text
+Mounted compiled app: /shop_pind (3 pages: 40 units, 40 as JVM code, 0 on the VM) in 86.7 ms: read and verified 12.9 ms, JVM code 73.8 ms
+```
+
+A unit is one `kaam` or one `<?pun ... ?>` block. A unit whose JVM code would be
+too large for the JIT compiler (more than 8,000 bytes) stays on the Pun VM, and
+the log names it and says why. Version 1 pages run on the interpreter. Output and
+errors are the same on every engine. The times at the end of the line are how
+long mounting took: reading and verifying the bundle, then making its JVM code.
+
+New JVM code starts slow and speeds up as the JVM compiles it, so the first few
+hundred requests to a page are slower than later ones.
+
+Two server options, given to `java` before `-jar`:
+
+- `-Dpun.vm.jvm=false` runs version 2 pages on the Pun VM instead of as JVM code.
+- `-Dpun.engine.header=true` adds three headers to every Pun response, for
+  benchmarking: `X-Pun-Engine` (`jvm`, `vm`, `jvm+vm (n units on the VM)` or
+  `interpreter`), `X-Pun-Alloc` (bytes the JVM allocated while the page
+  rendered; exact only while the server handles one request at a time) and
+  `X-Pun-Timing`, where the request's time went inside the server, in
+  milliseconds:
+
+  | Part | What it covers |
+  | --- | --- |
+  | `route` | Logging the request, path and mount checks, and for source pages the file checks |
+  | `request` | Parsing the query string and form body |
+  | `setup` | Preparing the page: globals, built-ins, `mang` and `jawab` |
+  | `run` | The page's code and literal HTML |
+  | `other` | The rest of rendering: the source cache check (and parsing, on a cache miss), finishing and encoding the output |
+  | `handler` | All of the above |
+
+  Sending the response comes after and is not included. Leave this option off in
+  production.
+
+```powershell
+java -Dpun.engine.header=true -jar target\pun-server.jar serve chowk --port 8094
+```
 
 With a reverse proxy or separate static server, forward protected requests to
 Pun Server or use a public-assets directory that excludes deployment internals.

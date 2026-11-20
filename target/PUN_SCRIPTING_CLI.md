@@ -1,6 +1,6 @@
 # Pun Scripting CLI
 
-Applies to **PUN 3.0.0 — Ghar Ghar Judeya, Pind Baneya.**
+Applies to **PUN 4.0.0 — Hisaab Pakka, Chaal Tez! 🚀**
 
 This document covers running Pun from the command line.
 
@@ -301,4 +301,17 @@ Use `java -jar pun-server.jar build <source-folder>` to create a separate
 build embeds that controller in the compressed `.pind` and deploys only the
 `.pind`; it never copies `.pun` source into the bundle. Serve the common parent
 folder with the existing `serve` command to run source and compiled apps together.
+
+Each page in the bundle is a `.ghar` file. By default the build writes version 2:
+the page compiled to instructions, which the server turns into JVM code when it
+mounts the bundle. It runs with the same output and errors as the interpreter,
+about 8.5 times faster than PUN 3.0.0 (4 to 14 times, depending on the work), and
+with far less memory churn. The build reports how many units (each `kaam` and each
+`<?pun ... ?>` block) will run as JVM code, for example
+`JVM code: 36 of 36 units (kaam and page blocks); 0 stay on the VM`. A unit too
+large for JVM code runs on the Pun VM instead. A page that defines a `kaam` inside a block or another
+`kaam` cannot run on the VM yet; the build keeps such pages as version 1 (the
+interpreter format) and says how many pages it kept. `--ghar 1` writes every page
+as version 1, for servers older than the VM. The server loads both versions, so
+existing bundles keep working without a rebuild.
 
