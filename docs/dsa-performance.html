@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pun DSA Performance</title>
+<meta name="description" content="How fast compiled Pun (.pind) runs classic data-structure and algorithm code, measured the same way for every PUN release.">
+<link rel="icon" type="image/png" href="pun_logo.png">
+<style>
+:root {
+    --bg: #fbf7f0;
+    --surface: #ffffff;
+    --ink: #1f1a17;
+    --muted: #675e55;
+    --line: #e6dccd;
+    --grid: #efe7da;
+    --kesri: #b4500a;
+    --kesri-soft: #fdf0e3;
+    --bar: #b4500a;
+    --neela: #1e3a8a;
+    --code-bg: #1c1917;
+    --code-ink: #f5efe6;
+    --code-c: #a8a29e;
+    --phulkari-a: #7a1f2b;
+    --phulkari-b: #e8a33d;
+    --radius: 14px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --pa: "Noto Sans Gurmukhi", "Raavi", "Mukta Mahee", var(--sans);
+    --mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #14110e;
+        --surface: #1e1a16;
+        --ink: #f3ece2;
+        --muted: #aaa096;
+        --line: #322b24;
+        --grid: #2a241e;
+        --kesri: #f59e4b;
+        --kesri-soft: #2a1d12;
+        --bar: #d9712a;
+        --neela: #9db8ff;
+        --code-bg: #0e0c0a;
+    }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--sans); }
+a { color: var(--neela); }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -.015em; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 .4em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); margin: 0 0 .5em; }
+h3 { font-size: 1.1rem; margin: 0 0 .4em; }
+p { margin: 0 0 1em; }
+code, pre { font-family: var(--mono); font-variant-ligatures: none; }
+p code, li code, td code {
+    font-size: .88em; background: var(--kesri-soft); color: var(--kesri);
+    padding: .1em .35em; border-radius: 5px;
+}
+.pa { font-family: var(--pa); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+.muted { color: var(--muted); }
+
+.phulkari {
+    height: 10px;
+    background:
+        conic-gradient(from 45deg, var(--phulkari-b) 25%, transparent 0 50%, var(--phulkari-b) 0 75%, transparent 0) 0 0 / 14px 14px,
+        var(--phulkari-a);
+}
+header.top { border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 12px 20px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
+.brand img { width: 28px; height: 28px; border-radius: 6px; }
+.brand span { color: var(--kesri); }
+header.top nav { display: flex; gap: 4px 16px; flex-wrap: wrap; font-size: .92rem; }
+header.top nav a { color: var(--muted); text-decoration: none; }
+header.top nav a:hover { color: var(--kesri); }
+header.top nav a[aria-current="page"] { color: var(--kesri); font-weight: 600; }
+
+section { padding: 44px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 64px; }
+.eyebrow {
+    display: inline-block; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--kesri); margin-bottom: 10px;
+}
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+.sub { color: var(--muted); margin-top: -.3em; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-width: 0; }
+
+/* Version picker: one row above everything it scopes */
+.picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 26px 0 22px; }
+#picker-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker .label { font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.picker button {
+    font: inherit; font-size: .92rem; padding: 7px 14px; border-radius: 9px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+.picker button:hover { border-color: var(--kesri); }
+.picker button[aria-pressed="true"] { border-color: var(--kesri); background: var(--kesri-soft); color: var(--kesri); font-weight: 600; }
+.picker button:focus-visible, .bar-row:focus-visible { outline: 2px solid var(--kesri); outline-offset: 2px; }
+
+/* Headline and stat tiles */
+.headline { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 2fr); gap: 16px; }
+.hero-fig { font-size: clamp(3rem, 8vw, 4.2rem); font-weight: 700; line-height: 1; letter-spacing: -.03em; margin: 4px 0 10px; }
+.hero-fig small { font-size: .4em; font-weight: 600; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 16px; }
+.tile .label { font-size: .85rem; color: var(--muted); }
+.tile .value { font-size: 1.6rem; font-weight: 650; margin-top: 2px; }
+.tile .detail { font-size: .82rem; color: var(--muted); }
+.release-name { font-weight: 600; }
+
+/* Chart: one series, horizontal bars from a single baseline */
+.chart { margin-top: 8px; }
+.bar-row { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr); align-items: center; gap: 12px; padding: 3px 0; border-radius: 6px; cursor: default; }
+.bar-row .name { font-size: .9rem; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track { position: relative; height: 26px; }
+.gridline { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--grid); }
+.gridline.base { background: var(--line); }
+.bar { position: absolute; left: 0; top: 5px; height: 16px; background: var(--bar); border-radius: 0 4px 4px 0; transition: filter .12s; }
+.bar-row:hover .bar, .bar-row:focus-visible .bar { filter: brightness(1.15); }
+.bar-value { position: absolute; top: 2px; font-size: .85rem; font-weight: 600; font-variant-numeric: tabular-nums; padding-left: 8px; white-space: nowrap; }
+.axis { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr); gap: 12px; margin-top: 4px; }
+.axis .ticks { position: relative; height: 18px; font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.axis .ticks span { position: absolute; transform: translateX(-50%); }
+.axis .ticks span:first-child { transform: none; }
+.tooltip {
+    position: fixed; z-index: 20; pointer-events: none; display: none; max-width: 280px;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 12px; font-size: .85rem; line-height: 1.45; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+}
+.tooltip .tt-value { font-size: 1.05rem; font-weight: 700; }
+.tooltip .tt-key { display: inline-block; width: 12px; height: 2px; background: var(--bar); vertical-align: middle; margin-right: 6px; }
+
+/* Tables */
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin: 0 0 1.2em; }
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.selected { font-weight: 600; }
+td .cx { display: block; font-size: .78rem; color: var(--muted); }
+tr.group-start td { border-top: 2px solid var(--line); }
+.quick { color: var(--muted); }
+details.card summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; }
+details.card[open] summary { margin-bottom: 14px; }
+
+.versions { display: grid; gap: 14px; }
+.versions .card h3 { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.versions .card h3 .date { font-size: .85rem; font-weight: 400; color: var(--muted); }
+.versions .card p { margin: 0 0 .3em; }
+ul.plain { padding-left: 1.2em; margin: 0; }
+ul.plain li { margin: 0 0 .5em; }
+pre.code {
+    margin: 0 0 1.2em; padding: 14px 18px; overflow-x: auto; background: var(--code-bg); color: var(--code-ink);
+    border-radius: var(--radius); font-size: .86rem; line-height: 1.6;
+}
+.empty { padding: 20px; border: 1px dashed var(--kesri); border-radius: var(--radius); background: var(--kesri-soft); }
+footer { padding: 28px 0 40px; color: var(--muted); font-size: .88rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+@media (max-width: 760px) {
+    .headline { grid-template-columns: minmax(0, 1fr); }
+    section { padding: 34px 0; }
+    header.top { position: static; }
+    .bar-row, .axis { grid-template-columns: minmax(90px, 120px) minmax(0, 1fr); }
+    .bar-row .name { white-space: normal; line-height: 1.2; font-size: .85rem; }
+    .axis .ticks span:nth-child(even) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.html#top"><img src="pun_logo.png" alt="">Pun<span>.</span></a>
+        <nav aria-label="Sections">
+            <a href="index.html#start">Get started</a>
+            <a href="index.html#run">Run Pun Server</a>
+            <a href="index.html#language">Language</a>
+            <a href="index.html#collections">Collections</a>
+            <a href="index.html#web">Requests</a>
+            <a href="index.html#database">MySQL</a>
+            <a href="index.html#cheatsheet">Cheat sheet</a>
+            <a href="dsa-performance.html" aria-current="page">DSA performance</a>
+            <a href="index.html#about">About Developer</a>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+
+<section>
+    <div class="wrap">
+        <span class="eyebrow">Benchmarks</span>
+        <h1>DSA performance</h1>
+        <p class="lede">How fast compiled Pun (<code>.pind</code>) runs classic data-structure and algorithm code: 14 algorithms for sorting, searching, Fibonacci and prime numbers, each at several sizes. Every PUN release is measured the same way on the same machine, so the versions can be compared directly.</p>
+
+        <div class="picker" role="group" aria-label="PUN version">
+            <span class="label">Version</span>
+            <span id="picker-buttons"></span>
+        </div>
+
+        <div id="headline" class="headline"></div>
+    </div>
+</section>
+
+<section id="by-algorithm">
+    <div class="wrap">
+        <div id="chart-block">
+            <h2 id="chart-title"></h2>
+            <p class="sub" id="chart-sub"></p>
+            <div class="card">
+                <div class="chart" id="chart" role="group" aria-labelledby="chart-title"></div>
+            </div>
+        </div>
+        <h2 id="largest-title" style="margin-top: 1.6em">Time per run at the largest size</h2>
+        <p class="sub" id="largest-sub"></p>
+        <div class="table-scroll"><table id="largest"></table></div>
+    </div>
+</section>
+
+<section id="all-tests">
+    <div class="wrap">
+        <details class="card">
+            <summary id="all-title">All tests</summary>
+            <p class="sub">Time per run for every test and every version measured. Values marked <span class="quick">(too quick)</span> finished in under 8 ms per request even when repeated, so they are shown but left out of the averages.</p>
+            <div class="table-scroll"><table id="all"></table></div>
+        </details>
+    </div>
+</section>
+
+<section id="versions">
+    <div class="wrap">
+        <h2>Versions</h2>
+        <div class="versions" id="version-list"></div>
+    </div>
+</section>
+
+<section id="method">
+    <div class="wrap">
+        <h2>How it's measured</h2>
+        <ul class="plain">
+            <li>The test page is <a href="https://github.com/skgchaudhary/pun/tree/main/chowk/sample_dsa"><code>chowk/sample_dsa</code></a>. Every test starts from the same seeded input, so each version gets exactly the same work.</li>
+            <li>Each release runs the page as a compiled <code>.pind</code> on its own Pun Server, warmed up, on the same laptop.</li>
+            <li>One request runs a test many times in a row (the <code>r</code> parameter), so even quick tests take long enough to time. The time shown is the fastest of three to five requests, minus the time for an empty page, divided by the number of runs.</li>
+            <li>A new release is measured together with the release before it: one run that alternates between their two servers request by request, so both see the same conditions.</li>
+            <li>Each test counts its own steps (comparisons, writes and calls) and checks its answer. Every version made exactly the same number of steps in every test, and every answer was correct.</li>
+            <li>Averages are geometric means, so a test that takes a long time doesn't outweigh a short one.</li>
+            <li>The times come from one laptop. Compare the versions with each other; your own machine will give different absolute times.</li>
+        </ul>
+    </div>
+</section>
+
+<section id="run">
+    <div class="wrap">
+        <h2>Run it yourself</h2>
+        <p>From the repository folder, build the test page and start the server:</p>
+<pre class="code">java -jar target/pun-server.jar build chowk/sample_dsa
+java -jar target/pun-server.jar serve chowk</pre>
+        <p>Then open <code>http://localhost:8080/sample_dsa_pind/</code> and pick an algorithm and size, or go straight to one, for example <code>http://localhost:8080/sample_dsa_pind/?algo=quick&amp;n=2000</code>.</p>
+    </div>
+</section>
+
+</main>
+
+<div class="phulkari" aria-hidden="true"></div>
+<footer>
+    <div class="wrap">
+        <span>PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀 &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
+    </div>
+</footer>
+
+<div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+
+<script src="dsa-performance-data.js"></script>
+<script>
+(function () {
+    var GROUPS = { sort: 'Sorting', search: 'Searching (100 lookups)', fib: 'Fibonacci', primes: 'Prime numbers' };
+    var ALGOS = {
+        bubble: ['Bubble sort', 'O(n²)'], insertion: ['Insertion sort', 'O(n²)'], selection: ['Selection sort', 'O(n²)'],
+        merge: ['Merge sort', 'O(n log n)'], quick: ['Quick sort', 'O(n log n) average'], heap: ['Heap sort', 'O(n log n)'],
+        linear: ['Linear search', 'O(n) per lookup'], binary: ['Binary search', 'O(log n) per lookup'], hash: ['Hash lookup', 'O(n) build, O(1) per lookup'],
+        fib_naive: ['Fibonacci, plain recursion', 'O(φⁿ)'], fib_memo: ['Fibonacci, memoized', 'O(n)'], fib_loop: ['Fibonacci, loop', 'O(n)'],
+        trial: ['Primes, trial division', 'O(n √n)'], sieve: ['Primes, sieve of Eratosthenes', 'O(n log log n)']
+    };
+    var data = window.PUN_DSA;
+    var $ = function (id) { return document.getElementById(id); };
+    function el(tag, attrs, text) {
+        var e = document.createElement(tag);
+        if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (text !== undefined) e.textContent = text;
+        return e;
+    }
+
+    if (!data || !data.versions || !data.versions.length) {
+        $('headline').appendChild(el('p', { 'class': 'empty' }, 'No results have been published yet.'));
+        return;
+    }
+    var versions = data.versions;
+
+    function ms(v) {
+        if (v >= 1000) return (v / 1000).toFixed(2) + ' s';
+        if (v >= 100) return Math.round(v).toLocaleString('en-US') + ' ms';
+        if (v >= 10) return v.toFixed(1) + ' ms';
+        if (v >= 1) return v.toFixed(2) + ' ms';
+        var us = v * 1000;
+        if (us >= 100) return Math.round(us) + ' µs';
+        if (us >= 10) return us.toFixed(1) + ' µs';
+        return us.toFixed(2) + ' µs';
+    }
+    function times(x) { return (x >= 10 ? x.toFixed(1) : x.toFixed(2)) + '×'; }
+    function day(iso) {
+        var p = iso.split('-').map(Number);
+        return p[2] + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][p[1] - 1] + ' ' + p[0];
+    }
+    function size(t) {
+        var n = t.n.toLocaleString('en-US');
+        return t.group === 'sort' ? n + ' numbers' : t.group === 'search' ? n + ' items'
+            : t.group === 'fib' ? 'n = ' + n : 'up to ' + n;
+    }
+    function geomean(xs) {
+        return Math.exp(xs.reduce(function (a, x) { return a + Math.log(x); }, 0) / xs.length);
+    }
+    function find(v, algo, n) {
+        for (var i = 0; i < v.tests.length; i++) if (v.tests[i].algo === algo && v.tests[i].n === n) return v.tests[i];
+        return null;
+    }
+    // Per algorithm: speedup of v over the previous version, over sizes timed in both.
+    function speedups(v, prev) {
+        var out = [], seen = {};
+        v.tests.forEach(function (t) {
+            if (seen[t.algo]) return;
+            seen[t.algo] = true;
+            var ratios = [];
+            v.tests.forEach(function (u) {
+                if (u.algo !== t.algo || !u.timed) return;
+                var p = find(prev, u.algo, u.n);
+                if (p && p.timed) ratios.push(p.ms / u.ms);
+            });
+            if (ratios.length) out.push({ algo: t.algo, group: t.group, x: geomean(ratios), sizes: ratios.length });
+        });
+        return out;
+    }
+    function largest(v, algo) {
+        var best = null;
+        v.tests.forEach(function (t) { if (t.algo === algo && t.timed && (!best || t.n > best.n)) best = t; });
+        return best;
+    }
+
+    var tooltip = $('tooltip');
+    function showTip(target, lines) {
+        tooltip.textContent = '';
+        lines.forEach(function (line, i) {
+            var row = el('div', i === 0 ? { 'class': 'tt-value' } : null);
+            if (i === 0) row.appendChild(el('span', { 'class': 'tt-key', 'aria-hidden': 'true' }));
+            row.appendChild(document.createTextNode(line));
+            tooltip.appendChild(row);
+        });
+        tooltip.style.display = 'block';
+        var r = target.getBoundingClientRect(), w = tooltip.offsetWidth, h = tooltip.offsetHeight;
+        var left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+        var top = r.top - h - 8 < 8 ? r.bottom + 8 : r.top - h - 8;
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+    }
+    function hideTip() { tooltip.style.display = 'none'; }
+    window.addEventListener('scroll', hideTip, { passive: true });
+
+    function render(index) {
+        var v = versions[index], prev = versions[index + 1] || null;
+        var name = 'PUN ' + v.version;
+
+        // Picker
+        var buttons = $('picker-buttons');
+        buttons.textContent = '';
+        versions.forEach(function (w, i) {
+            var b = el('button', { type: 'button', 'aria-pressed': String(i === index) }, w.version + (i === 0 ? ' (latest)' : ''));
+            b.addEventListener('click', function () {
+                history.replaceState(null, '', '#v' + w.version);
+                render(i);
+            });
+            buttons.appendChild(b);
+        });
+
+        // Headline: the one figure, then the tiles
+        var head = $('headline');
+        head.textContent = '';
+        var heroCard = el('div', { 'class': 'card' });
+        var timed = v.tests.filter(function (t) { return t.timed; });
+        if (prev) {
+            var both = [];
+            timed.forEach(function (t) { var p = find(prev, t.algo, t.n); if (p && p.timed) both.push(p.ms / t.ms); });
+            var fig = el('div', { 'class': 'hero-fig' }, times(geomean(both)));
+            fig.appendChild(el('small', null, 'faster'));
+            heroCard.appendChild(el('div', { 'class': 'muted' }, name + ' compared with PUN ' + prev.version));
+            heroCard.appendChild(fig);
+            heroCard.appendChild(el('p', { 'class': 'muted', style: 'margin: 0' },
+                'Geometric mean over the ' + both.length + ' tests timed in both versions; between ' +
+                times(Math.min.apply(null, both)) + ' and ' + times(Math.max.apply(null, both)) + ' by test.' +
+                (v.run && v.run === prev.run ? ' Both were measured together in one run, alternating request by request.' : '')));
+        } else {
+            heroCard.appendChild(el('span', { 'class': 'muted' }, name));
+            heroCard.appendChild(el('div', { 'class': 'hero-fig' }, String(timed.length)));
+            heroCard.appendChild(el('p', { 'class': 'muted', style: 'margin: 0' }, 'tests timed. This is the first version on this page, so later versions are compared with it.'));
+        }
+        head.appendChild(heroCard);
+
+        var tiles = el('div', { 'class': 'tiles' });
+        function tile(label, value, detail) {
+            var t = el('div', { 'class': 'card tile' });
+            t.appendChild(el('div', { 'class': 'label' }, label));
+            t.appendChild(el('div', { 'class': 'value' }, value));
+            if (detail) t.appendChild(el('div', { 'class': 'detail' }, detail));
+            tiles.appendChild(t);
+        }
+        var quick = find(v, 'quick', 2000), bubble = find(v, 'bubble', 2000), fib = find(v, 'fib_naive', 30);
+        if (quick) tile('Quick sort, 2,000 numbers', ms(quick.ms), prev && find(prev, 'quick', 2000) ? ms(find(prev, 'quick', 2000).ms) + ' in PUN ' + prev.version : 'per run');
+        if (bubble) tile('Bubble sort, 2,000 numbers', ms(bubble.ms), prev && find(prev, 'bubble', 2000) ? ms(find(prev, 'bubble', 2000).ms) + ' in PUN ' + prev.version : 'per run');
+        if (fib) tile('Fibonacci 30, plain recursion', ms(fib.ms), prev && find(prev, 'fib_naive', 30) ? ms(find(prev, 'fib_naive', 30).ms) + ' in PUN ' + prev.version : 'per run');
+        tile('Empty page', ms(v.emptyPageMs), 'a request with no algorithm');
+        tile('Answers checked', v.tests.length + ' of ' + v.tests.length, 'same steps in every version');
+        var rel = el('div', { 'class': 'card tile' });
+        rel.appendChild(el('div', { 'class': 'label' }, 'Release'));
+        rel.appendChild(el('div', { 'class': 'value release-name' }, v.version));
+        if (v.name) rel.appendChild(el('div', { 'class': 'detail' }, v.name));
+        rel.appendChild(el('div', { 'class': 'detail' }, 'measured ' + day(v.date)));
+        tiles.appendChild(rel);
+        head.appendChild(tiles);
+
+        // Chart: how much faster than the previous version, by algorithm
+        var chart = $('chart');
+        chart.textContent = '';
+        if (prev) {
+            $('chart-block').style.display = '';
+            $('chart-title').textContent = 'How much faster than PUN ' + prev.version + ', by algorithm';
+            $('chart-sub').textContent = name + ' against PUN ' + prev.version + '. Each bar is the geometric mean over that algorithm\'s timed sizes; 1× would mean no change.';
+            var rows = speedups(v, prev);
+            var max = Math.max.apply(null, rows.map(function (r) { return r.x; }));
+            var step = [1, 2, 5, 10, 20, 50].find(function (s) { return max / s <= 6; }) || 100;
+            var top = Math.ceil((max * 1.12) / step) * step;
+            var ticks = [];
+            for (var t = 0; t <= top + 1e-9; t += step) ticks.push(t);
+            rows.forEach(function (r) {
+                var newest = largest(v, r.algo), older = newest && find(prev, r.algo, newest.n);
+                var label = ALGOS[r.algo][0] + ': ' + times(r.x) + ' faster than PUN ' + prev.version;
+                var row = el('div', { 'class': 'bar-row', tabindex: '0', 'aria-label': label });
+                row.appendChild(el('div', { 'class': 'name' }, ALGOS[r.algo][0]));
+                var track = el('div', { 'class': 'track' });
+                ticks.forEach(function (t) {
+                    var g = el('div', { 'class': 'gridline' + (t === 0 ? ' base' : ''), 'aria-hidden': 'true' });
+                    g.style.left = (t / top * 100) + '%';
+                    track.appendChild(g);
+                });
+                var bar = el('div', { 'class': 'bar', 'aria-hidden': 'true' });
+                bar.style.width = (r.x / top * 100) + '%';
+                track.appendChild(bar);
+                var value = el('div', { 'class': 'bar-value', 'aria-hidden': 'true' }, times(r.x));
+                value.style.left = (r.x / top * 100) + '%';
+                track.appendChild(value);
+                row.appendChild(track);
+                var lines = [times(r.x) + ' faster', ALGOS[r.algo][0]];
+                if (newest && older) lines.push(size(newest) + ': ' + ms(newest.ms) + ', was ' + ms(older.ms));
+                lines.push('over ' + r.sizes + (r.sizes === 1 ? ' size' : ' sizes'));
+                row.addEventListener('pointerenter', function () { showTip(row, lines); });
+                row.addEventListener('pointerleave', hideTip);
+                row.addEventListener('focus', function () { showTip(row, lines); });
+                row.addEventListener('blur', hideTip);
+                chart.appendChild(row);
+            });
+            var axis = el('div', { 'class': 'axis', 'aria-hidden': 'true' });
+            axis.appendChild(el('div'));
+            var tickBox = el('div', { 'class': 'ticks' });
+            ticks.forEach(function (t) {
+                var s = el('span', null, t + '×');
+                s.style.left = (t / top * 100) + '%';
+                tickBox.appendChild(s);
+            });
+            axis.appendChild(tickBox);
+            chart.appendChild(axis);
+        } else {
+            $('chart-block').style.display = 'none';
+        }
+        $('largest-title').style.marginTop = prev ? '1.6em' : '0';
+
+        // Table: the largest timed size of each algorithm
+        var table = $('largest');
+        table.textContent = '';
+        $('largest-sub').textContent = prev
+            ? name + ' and PUN ' + prev.version + ', one run of each algorithm at its largest timed size.'
+            : name + ', one run of each algorithm at its largest timed size.';
+        var thead = el('thead'), hr = el('tr');
+        ['Algorithm', 'Size', name].concat(prev ? ['PUN ' + prev.version, 'Faster'] : []).forEach(function (h, i) {
+            hr.appendChild(el('th', i >= 2 ? { 'class': 'num' } : null, h));
+        });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+        var tbody = el('tbody'), lastGroup = null;
+        Object.keys(ALGOS).forEach(function (algo) {
+            var t = largest(v, algo);
+            if (!t) return;
+            var tr = el('tr', t.group !== lastGroup && lastGroup !== null ? { 'class': 'group-start' } : null);
+            lastGroup = t.group;
+            var nameCell = el('td', null, ALGOS[algo][0]);
+            nameCell.appendChild(el('span', { 'class': 'cx' }, ALGOS[algo][1]));
+            tr.appendChild(nameCell);
+            tr.appendChild(el('td', null, size(t)));
+            tr.appendChild(el('td', { 'class': 'num selected' }, ms(t.ms)));
+            if (prev) {
+                var p = find(prev, algo, t.n);
+                tr.appendChild(el('td', { 'class': 'num' }, p ? ms(p.ms) : '–'));
+                tr.appendChild(el('td', { 'class': 'num' }, p && p.timed ? times(p.ms / t.ms) : '–'));
+            }
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        var missing = Object.keys(ALGOS).filter(function (a) { return !largest(v, a); });
+        if (missing.length) $('largest-sub').textContent += ' Not shown: ' + missing.map(function (a) { return ALGOS[a][0]; }).join(', ') + ' (too quick to time at every size).';
+
+        // All tests, every version side by side
+        $('all-title').textContent = 'All ' + v.tests.length + ' tests';
+        var all = $('all');
+        all.textContent = '';
+        var ah = el('thead'), ahr = el('tr');
+        ahr.appendChild(el('th', null, 'Test'));
+        ahr.appendChild(el('th', null, 'Size'));
+        versions.forEach(function (w) { ahr.appendChild(el('th', { 'class': 'num' }, 'PUN ' + w.version)); });
+        if (prev) ahr.appendChild(el('th', { 'class': 'num' }, v.version + ' vs ' + prev.version));
+        ah.appendChild(ahr);
+        all.appendChild(ah);
+        var ab = el('tbody'), lastAlgo = null;
+        v.tests.forEach(function (t) {
+            var tr = el('tr', t.algo !== lastAlgo && lastAlgo !== null ? { 'class': 'group-start' } : null);
+            tr.appendChild(el('td', null, t.algo !== lastAlgo ? ALGOS[t.algo][0] : ''));
+            lastAlgo = t.algo;
+            tr.appendChild(el('td', null, size(t)));
+            versions.forEach(function (w, i) {
+                var x = find(w, t.algo, t.n);
+                var td = el('td', { 'class': 'num' + (i === index ? ' selected' : '') }, x ? ms(x.ms) : '–');
+                if (x && !x.timed) td.appendChild(el('span', { 'class': 'quick' }, ' (too quick)'));
+                tr.appendChild(td);
+            });
+            if (prev) {
+                var p = find(prev, t.algo, t.n);
+                tr.appendChild(el('td', { 'class': 'num' }, p && p.timed && t.timed ? times(p.ms / t.ms) : '–'));
+            }
+            ab.appendChild(tr);
+        });
+        all.appendChild(ab);
+
+        // Versions
+        var list = $('version-list');
+        list.textContent = '';
+        versions.forEach(function (w) {
+            var card = el('div', { 'class': 'card' });
+            var h = el('h3', null, 'PUN ' + w.version + (w.name ? ' — ' + w.name : ''));
+            h.appendChild(el('span', { 'class': 'date' }, 'measured ' + day(w.date)));
+            card.appendChild(h);
+            if (w.engine) card.appendChild(el('p', null, w.engine));
+            if (w.note) card.appendChild(el('p', null, w.note));
+            card.appendChild(el('p', { 'class': 'muted' }, w.machine.host + '; ' + w.machine.java.replace(/^openjdk version "([^"]+)".*/, 'Java $1') + '; ' + w.machine.power + '.'));
+            list.appendChild(card);
+        });
+    }
+
+    var start = 0;
+    var match = /^#v(\d+\.\d+\.\d+)$/.exec(location.hash);
+    if (match) versions.forEach(function (w, i) { if (w.version === match[1]) start = i; });
+    render(start);
+})();
+</script>
+</body>
+</html>
