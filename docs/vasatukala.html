@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUN Vasatukala · Pun architecture</title>
+<meta name="description" content="PUN Vasatukala: architecture diagrams of Pun. How build compiles .pun templates into one .pind bundle, and how Pun Server loads bundles at startup and runs a page on every request.">
+<link rel="icon" type="image/png" href="pun_logo.png">
+<style>
+:root {
+    --bg: #fbf7f0;
+    --surface: #ffffff;
+    --ink: #1f1a17;
+    --muted: #675e55;
+    --line: #e6dccd;
+    --kesri: #b4500a;
+    --kesri-soft: #fdf0e3;
+    --neela: #1e3a8a;
+    --code-bg: #1c1917;
+    --code-ink: #f5efe6;
+    --phulkari-a: #7a1f2b;
+    --phulkari-b: #e8a33d;
+    --radius: 14px;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --pa: "Noto Sans Gurmukhi", "Raavi", "Mukta Mahee", var(--sans);
+    --mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+
+    /* Diagram colours: blue shared, orange PUN VM, green JVM, purple AST interpreter */
+    --d-blue: #3567c4;   --d-blue-bg: #eaf1fd;   --d-blue-ink: #1e3a8a;
+    --d-orange: #d06a12; --d-orange-bg: #fdecd9; --d-orange-ink: #9a4706;
+    --d-green: #2f8f5b;  --d-green-bg: #e4f4e9;  --d-green-ink: #1c6a40;
+    --d-purple: #8452c9; --d-purple-bg: #f0e8fb; --d-purple-ink: #5e2fa0;
+    --d-stop: #a8323e;   --d-stop-bg: #fbeeee;   --d-stop-ink: #8a2232;
+    --d-check: #8a7f74;
+    --d-edge: #7d7369;
+    --d-band: #f1e8da;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #14110e;
+        --surface: #1e1a16;
+        --ink: #f3ece2;
+        --muted: #aaa096;
+        --line: #322b24;
+        --kesri: #f59e4b;
+        --kesri-soft: #2a1d12;
+        --neela: #9db8ff;
+        --code-bg: #0e0c0a;
+
+        --d-blue: #6f9be9;   --d-blue-bg: #15223b;   --d-blue-ink: #a9c5ff;
+        --d-orange: #e98b3a; --d-orange-bg: #2e1d0e; --d-orange-ink: #f8b77a;
+        --d-green: #4bbb7d;  --d-green-bg: #11291b;  --d-green-ink: #8fe0b3;
+        --d-purple: #a684e6; --d-purple-bg: #241939; --d-purple-ink: #d2bdf7;
+        --d-stop: #e0707e;   --d-stop-bg: #2d1417;   --d-stop-ink: #f4a3ad;
+        --d-check: #9b9086;
+        --d-edge: #a1968b;
+        --d-band: #2b241d;
+    }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.65 var(--sans); }
+a { color: var(--neela); }
+h1, h2, h3 { line-height: 1.2; letter-spacing: -.015em; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 .4em; }
+h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); margin: 0 0 .5em; }
+h3 { font-size: 1.1rem; margin: 1.6em 0 .5em; }
+p { margin: 0 0 1em; }
+code, pre { font-family: var(--mono); font-variant-ligatures: none; }
+p code, li code, td code, dd code, h2 code, h3 code, summary code {
+    font-size: .88em; background: var(--kesri-soft); color: var(--kesri);
+    padding: .1em .35em; border-radius: 5px;
+}
+.pa { font-family: var(--pa); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+.muted { color: var(--muted); }
+
+.phulkari {
+    height: 10px;
+    background:
+        conic-gradient(from 45deg, var(--phulkari-b) 25%, transparent 0 50%, var(--phulkari-b) 0 75%, transparent 0) 0 0 / 14px 14px,
+        var(--phulkari-a);
+}
+header.top { border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
+header.top .wrap { display: flex; align-items: center; gap: 12px 20px; padding-top: 10px; padding-bottom: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
+.brand img { width: 28px; height: 28px; border-radius: 6px; }
+.brand span { color: var(--kesri); }
+header.top nav { display: flex; gap: 4px 12px; flex-wrap: wrap; font-size: .92rem; }
+header.top nav a { color: var(--muted); text-decoration: none; }
+header.top nav a:hover { color: var(--kesri); }
+header.top nav a[aria-current="page"] { color: var(--kesri); font-weight: 600; }
+
+section { padding: 48px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 64px; }
+.eyebrow {
+    display: inline-block; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--kesri); margin-bottom: 10px;
+}
+.eyebrow .pa { text-transform: none; letter-spacing: 0; font-size: 1.15em; }
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+.note {
+    padding: 12px 16px; border-radius: var(--radius); border: 1px dashed var(--kesri);
+    background: var(--kesri-soft); margin: 0 0 1.2em;
+}
+.note strong { color: var(--kesri); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; min-width: 0; }
+.card h3 { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+.card .term { font-family: var(--mono); font-size: 1.15rem; font-weight: 700; color: var(--kesri); }
+.card .term-sub { display: block; font-size: .85rem; color: var(--muted); margin: 2px 0 8px; }
+pre.code {
+    margin: 0 0 1em; padding: 12px 16px; overflow-x: auto; background: var(--code-bg); color: var(--code-ink);
+    border-radius: 10px; font-size: .84rem; line-height: 1.55;
+}
+
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin: 0 0 1.2em; }
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; white-space: nowrap; }
+td.when { white-space: nowrap; font-weight: 600; }
+
+/* On this page */
+.onpage { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.onpage a {
+    padding: 6px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface);
+    color: var(--ink); text-decoration: none; font-size: .92rem;
+}
+.onpage a:hover { border-color: var(--kesri); color: var(--kesri); }
+
+/* When each step happens */
+ol.phases { list-style: none; margin: 0 0 20px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: ph; }
+ol.phases > li { counter-increment: ph; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; position: relative; }
+ol.phases > li::before {
+    content: counter(ph); position: absolute; top: 14px; right: 16px; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--kesri); color: #fff; font-weight: 700; font-size: .85rem;
+}
+@media (prefers-color-scheme: dark) { ol.phases > li::before { color: #1a1008; } }
+ol.phases .when { display: block; font-size: .75rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+ol.phases strong { display: block; font-size: 1.08rem; margin: 2px 0 6px; }
+ol.phases p { margin: 0; font-size: .95rem; }
+.keep { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.keep h3 { margin: 0 0 .35em; font-size: 1rem; }
+
+/* Legend */
+.legend { list-style: none; margin: 0 0 22px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); font-size: .9rem; }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend svg.dg { flex: none; display: inline-block; width: 30px; height: 20px; max-width: none; margin: 0; }
+.legend .tagname { font: 700 .72rem var(--sans); letter-spacing: .07em; color: var(--muted); }
+
+/* Phase headers separate startup from each request */
+.phase { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 34px 0 14px; padding: 10px 16px; border-radius: 10px; background: var(--d-band); border-left: 6px solid var(--kesri); }
+.phase strong { font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
+.phase span { color: var(--muted); font-size: .92rem; }
+.phase.request { border-left-color: var(--d-blue); }
+
+/* Diagram panels */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 20px; align-items: start; }
+figure.panel { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 14px 12px; min-width: 0; }
+figure.panel h3 { margin: 0 4px 10px; font-size: 1.02rem; }
+figure.panel h3 .num { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 6px; border-radius: 50%; background: var(--kesri); color: #fff; font-size: .8rem; vertical-align: 1px; }
+@media (prefers-color-scheme: dark) { figure.panel h3 .num { color: #1a1008; } }
+figcaption { margin: 10px 4px 0; font-size: .9rem; color: var(--muted); }
+figcaption p { margin: 0 0 .5em; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.grid-aside { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.grid-aside h3 { font-size: 1rem; }
+.phase, figure.panel, h3[id] { scroll-margin-top: 72px; }
+details.textalt { margin: 8px 4px 0; font-size: .92rem; }
+details.textalt summary { cursor: pointer; color: var(--neela); font-weight: 600; }
+details.textalt ol, details.textalt ul { margin: .5em 0 0; padding-left: 1.3em; }
+details.textalt li { margin: .2em 0; }
+
+svg.dg { display: block; width: 100%; height: auto; max-width: 470px; margin: 0 auto; font-family: var(--sans); }
+.dg text { fill: var(--ink); }
+.dg .tt { font-size: 15px; font-weight: 650; }
+.dg .tb { font-size: 13.5px; }
+.dg .tg { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; }
+.dg .m { font-family: var(--mono); font-size: .93em; }
+.dg .bx { stroke-width: 1.5; }
+.dg .k-blue .bx { fill: var(--d-blue-bg); stroke: var(--d-blue); }
+.dg .k-blue .tg { fill: var(--d-blue-ink); }
+.dg .k-orange .bx { fill: var(--d-orange-bg); stroke: var(--d-orange); }
+.dg .k-orange .tg { fill: var(--d-orange-ink); }
+.dg .k-green .bx { fill: var(--d-green-bg); stroke: var(--d-green); }
+.dg .k-green .tg { fill: var(--d-green-ink); }
+.dg .k-purple .bx { fill: var(--d-purple-bg); stroke: var(--d-purple); }
+.dg .k-purple .tg { fill: var(--d-purple-ink); }
+.dg .k-stop .bx { fill: var(--d-stop-bg); stroke: var(--d-stop); stroke-dasharray: 4 3; }
+.dg .k-stop .tg { fill: var(--d-stop-ink); }
+.dg .k-check .bx { fill: var(--surface); stroke: var(--d-check); }
+.dg .k-check .tg { fill: var(--muted); }
+.dg .dashed .bx { stroke-dasharray: 6 4; }
+.dg .ed { fill: none; stroke: var(--d-edge); stroke-width: 1.6; stroke-linejoin: round; }
+.dg .ed.dash { stroke-dasharray: 5 4; }
+.dg .ed.dot { stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+.dg .ah { fill: var(--d-edge); }
+.dg .el, .dg .fl { font-size: 12px; font-weight: 600; fill: var(--muted); paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.dg .fl { font-size: 10.5px; letter-spacing: .07em; }
+.dg .fr { fill: none; stroke: var(--d-check); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.dg .nt { font-size: 12.5px; fill: var(--muted); }
+.dg .rl { stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 4; }
+.dg .band rect { fill: var(--d-band); }
+.dg .band text { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; }
+
+footer { padding: 28px 0 40px; color: var(--muted); font-size: .88rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+@media (max-width: 760px) {
+    section { padding: 36px 0; }
+    header.top { position: static; }
+    ol.phases { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+    /* Let diagrams use the full phone width so their text stays readable. */
+    figure.panel { margin: 0 -12px; border-radius: 0; border-left: 0; border-right: 0; padding: 14px 4px 10px; }
+    figure.panel h3, figcaption, details.textalt { margin-left: 12px; margin-right: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="phulkari" aria-hidden="true"></div>
+<header class="top">
+    <div class="wrap">
+        <a class="brand" href="index.html#top"><img src="pun_logo.png" alt="">PUN<span>.</span></a>
+        <nav aria-label="Sections">
+            <a href="index.html#start">Get started</a>
+            <a href="index.html#run">Run Pun Server</a>
+            <a href="index.html#language">Language</a>
+            <a href="index.html#collections">Collections</a>
+            <a href="index.html#web">Requests</a>
+            <a href="index.html#database">MySQL</a>
+            <a href="index.html#cheatsheet">Cheat sheet</a>
+            <a href="dsa-performance.html">DSA performance</a>
+            <a href="vasatukala.html" aria-current="page">PUN Vasatukala</a>
+            <a href="index.html#about">About Developer</a>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+
+<section id="vasatukala">
+    <div class="wrap">
+        <span class="eyebrow">PUN Vasatukala &middot; <span class="pa" lang="pa">ਵਾਸਤੂਕਲਾ</span> &middot; architecture</span>
+        <h1>How Pun builds and runs a page</h1>
+        <p class="lede">Two flows, drawn from the PUN 4.0.0 source code. <strong>Build</strong> turns <code>.pun</code> templates into one <code>.pind</code> bundle. <strong>Runtime</strong> loads that bundle once when Pun Server starts, then runs a page for every request.</p>
+        <nav class="onpage" aria-label="On this page">
+            <a href="#terms">Words to know</a>
+            <a href="#when">When each step happens</a>
+            <a href="#build">1. Build flow</a>
+            <a href="#runtime">2. Runtime flow</a>
+            <a href="#fallback">Fallback rules</a>
+            <a href="#source-pages">Source pages</a>
+            <a href="#security">Bundles and protected files</a>
+        </nav>
+    </div>
+</section>
+
+<section id="terms">
+    <div class="wrap">
+        <span class="eyebrow">Start here</span>
+        <h2>Words to know</h2>
+        <div class="grid3">
+            <div class="card">
+                <span class="term">.pun</span>
+                <span class="term-sub">source template</span>
+                <p>The page you write: ordinary HTML with <code>&lt;?pun &hellip; ?&gt;</code> blocks. Pun Server can run it straight from the folder, or <code>build</code> can compile it.</p>
+            </div>
+            <div class="card">
+                <span class="term">.ghar</span>
+                <span class="term-sub">compiled page &middot; <span class="pa" lang="pa">ਘਰ</span>, home</span>
+                <p>One page inside a bundle. Version 1 holds the page's syntax tree (AST) for the interpreter. Version 2 holds PUN VM instructions. Both keep the literal HTML as text.</p>
+            </div>
+            <div class="card">
+                <span class="term">.pind</span>
+                <span class="term-sub">application bundle &middot; <span class="pa" lang="pa">ਪਿੰਡ</span>, village</span>
+                <p>The whole app in one compressed ZIP file: every <code>.ghar</code> page, the public assets, the route controller and a manifest. You deploy just this file.</p>
+            </div>
+            <div class="card">
+                <span class="term">.raah.json</span>
+                <span class="term-sub">route controller &middot; <span class="pa" lang="pa">ਰਾਹ</span>, way</span>
+                <p>Which URL runs which page. It lives in your source folder, and <code>build</code> copies it into the <code>.pind</code>.</p>
+            </div>
+            <div class="card">
+                <span class="term">PUN VM &ne; JVM</span>
+                <span class="term-sub">two different engines</span>
+                <p>The <strong>PUN VM</strong> is Pun's own instruction engine: a loop inside Pun Server that runs version 2 instructions. The <strong>JVM</strong> (Java Virtual Machine) runs Pun Server itself. Pun can turn PUN VM instructions into JVM classes so the JVM runs them directly.</p>
+            </div>
+            <div class="card">
+                <span class="term">AST interpreter</span>
+                <span class="term-sub">the original engine</span>
+                <p>Walks the syntax tree statement by statement. It runs <code>.pun</code> source pages and version 1 <code>.ghar</code> pages.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="when">
+    <div class="wrap">
+        <span class="eyebrow">Timing</span>
+        <h2>When each step happens</h2>
+        <ol class="phases">
+            <li>
+                <span class="when">Build time</span>
+                <strong>The page format is chosen</strong>
+                <p><code>build</code> (or <b>Build PIND</b> in the desktop app) compiles every page, picks its <code>.ghar</code> version and packs everything into one <code>.pind</code>. Once per build, on your machine.</p>
+            </li>
+            <li>
+                <span class="when">Server startup</span>
+                <strong>JVM code is prepared</strong>
+                <p>Pun Server finds and checks each bundle, verifies its version 2 pages and turns them into JVM classes in memory. Once per server start.</p>
+            </li>
+            <li>
+                <span class="when">Every request</span>
+                <strong>The page runs</strong>
+                <p>The URL picks a page, new <code>mang</code>, <code>jawab</code> and variables are made, and the page runs on the interpreter, the PUN VM or as JVM code.</p>
+            </li>
+        </ol>
+        <div class="keep">
+            <div class="card">
+                <h3>Kept and reused</h3>
+                <p>Decoded pages, verified PUN VM instructions, generated JVM classes, routes and assets stay in memory for as long as the server runs. Parsed <code>.pun</code> source pages are cached too. Restart the server to load a rebuilt bundle.</p>
+            </div>
+            <div class="card">
+                <h3>New for every request</h3>
+                <p><code>mang</code>, <code>jawab</code>, every variable, every <code>kaam</code> value and the output buffer. Nothing a page sets carries over to the next request.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="build">
+    <div class="wrap">
+        <span class="eyebrow">Diagram 1</span>
+        <h2>Build: from <code>.pun</code> to <code>.pind</code></h2>
+        <p>Run <code>java -jar target/pun-server.jar build ./my-site</code>, or click <b>Build PIND</b>. Pun reads every file in the folder, compiles each page and writes one bundle to <code>my-site_pind/my-site.pind</code>. The source folder isn't changed, except that the first build adds a route controller to it.</p>
+        <!-- legend -->
+        <ul class="legend" aria-label="Diagram key">
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-blue"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Blue: shared steps</strong> <span class="tagname">BUILD &middot; PACKAGE &middot; ROUTING &middot; REQUEST &middot; RESPONSE</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-orange"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Orange: PUN VM</strong> instructions and execution <span class="tagname">PUN VM</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-green"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Green: JVM</strong> compilation and execution <span class="tagname">JVM</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-purple"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Purple: AST interpreter</strong> <span class="tagname">INTERPRETER</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-check"><polygon class="bx" points="6,1 24,1 29,10 24,19 6,19 1,10"/></g></svg><span><strong>Decision</strong>, a question</span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-stop"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Stop</strong>, no fallback <span class="tagname">STOP</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-check dashed"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Dashed</strong>: a check, a note or a separate activity</span></li>
+        </ul>
+        <!-- /legend -->
+        <div class="panels">
+            <figure class="panel" id="panel-1">
+                <h3 id="h-build-page"><span class="num" aria-hidden="true">1</span><span class="sr-only">Panel 1: </span>Each page: source to <code>.ghar</code></h3>
+<!-- diagram:build-page -->
+<svg class="dg" id="dg-build-page" viewBox="0 0 400 1157" width="400" height="1157" role="img" aria-labelledby="h-build-page" aria-describedby="cap-build-page" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-build-page-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<path class="ed" d="M200,82.5 L200,114.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,205 L117,243" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,333.5 L117,365.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M224,288.3 L240,288.3 L240,349.5 L256,349.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M224,410.8 L240,410.8 L240,349.5 L256,349.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,456 L117,488" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,560.5 L117,592.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,628.5 L117,664.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M212,610.5 L234,610.5 L234,684 L256,684" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M212,720 L234,720 L234,684 L256,684" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,775.5 L117,811.5" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M224,856.8 L240,856.8 L240,865.8 L256,865.8" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed" d="M117,902 L117,934" marker-end="url(#dg-build-page-ah)"/>
+<path class="ed dash" d="M224,958 L256,958" marker-end="url(#dg-build-page-ah)"/>
+<g class="nd k-blue"><rect class="bx" x="10" y="10" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="27.5">SOURCE</text><text class="tt"><tspan x="21" y="49.4">dashboard.pun</tspan></text><text class="tb"><tspan x="21" y="69.3">Literal HTML with <tspan class="m">&lt;?pun … ?&gt;</tspan> script blocks</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="114.5" width="380" height="90.5" rx="8"/><text class="tg" x="21" y="132">BUILD</text><text class="tt"><tspan x="21" y="153.9">Template scan</tspan></text><text class="tb"><tspan x="21" y="173.8">Splits the page at <tspan class="m">&lt;?pun</tspan> and <tspan class="m">?&gt;</tspan>. HTML between blocks </tspan><tspan x="21" dy="18">is kept as literal text.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="243" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="260.5">BUILD</text><text class="tt"><tspan x="21" y="282.4">Lexer → tokens</tspan></text><text class="tb"><tspan x="21" y="302.3">Line numbers count from the </tspan><tspan x="21" dy="18">top of the page</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="365.5" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="383">BUILD</text><text class="tt"><tspan x="21" y="404.9">Parser → AST</tspan></text><text class="tb"><tspan x="21" y="424.8">The block's statements as a </tspan><tspan x="21" dy="18">syntax tree</tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="243" width="134" height="213" rx="8"/><text class="tg" x="267" y="294.8">STOP</text><text class="tt"><tspan x="267" y="316.7">Build stops</tspan></text><text class="tb"><tspan x="267" y="336.6">Syntax error or </tspan><tspan x="267" dy="18">missing <tspan class="m">?&gt;</tspan>. </tspan><tspan x="267" dy="18">Prints </tspan><tspan x="267" dy="18">file:line; </tspan><tspan x="267" dy="18">writes nothing.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="488" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="505.5">BUILD</text><text class="tt"><tspan x="21" y="527.4">Page template</tspan></text><text class="tb"><tspan x="21" y="547.3">Literal text and code segments, in page order</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,592.5 197,592.5 212,610.5 197,628.5 37,628.5 22,610.5"/><text class="tt" text-anchor="middle"><tspan x="117" y="615.4"><tspan class="m">--ghar 1</tspan> given?</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,664.5 197,664.5 212,720 197,775.5 37,775.5 22,720"/><text class="tt" text-anchor="middle"><tspan x="117" y="687.4">Every <tspan class="m">kaam</tspan> at </tspan><tspan x="117" dy="19">page level?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="726.3">Not inside <tspan class="m">je</tspan>, <tspan class="m">vekh</tspan>, </tspan><tspan x="117" dy="18">a loop, <tspan class="m">{ }</tspan> or </tspan><tspan x="117" dy="18">another <tspan class="m">kaam</tspan></tspan></text></g>
+<g class="nd k-purple"><rect class="bx" x="256" y="592.5" width="134" height="183" rx="8"/><text class="tg" x="267" y="646.8">INTERPRETER</text><text class="tt"><tspan x="267" y="668.7">Version 1 </tspan><tspan x="267" dy="19">.ghar</tspan></text><text class="tb"><tspan x="267" y="707.6">Literal HTML + </tspan><tspan x="267" dy="18">serialized AST</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="10" y="811.5" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="829">PUN VM</text><text class="tt"><tspan x="21" y="850.9">PUN VM compiler</tspan></text><text class="tb"><tspan x="21" y="870.8">AST → VM instructions. One </tspan><tspan x="21" dy="18">unit per <tspan class="m">kaam</tspan> and per block.</tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="811.5" width="134" height="108.5" rx="8"/><text class="tg" x="267" y="829">STOP</text><text class="tt"><tspan x="267" y="850.9">Build stops</tspan></text><text class="tb"><tspan x="267" y="870.8">Any other </tspan><tspan x="267" dy="18">compiler error. </tspan><tspan x="267" dy="18">No fallback.</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="10" y="934" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="951.5">PUN VM</text><text class="tt"><tspan x="21" y="973.4">Version 2 .ghar</tspan></text><text class="tb"><tspan x="21" y="993.3">Literal HTML + VM </tspan><tspan x="21" dy="18">instruction units</tspan></text></g>
+<g class="nd k-green dashed"><rect class="bx" x="256" y="934" width="134" height="180.5" rx="8"/><text class="tg" x="267" y="951.5">JVM · CHECK</text><text class="tt"><tspan x="267" y="973.4">JVM dry run</tspan></text><text class="tb"><tspan x="267" y="993.3">Verifies the </tspan><tspan x="267" dy="18">page, </tspan><tspan x="267" dy="18">translates it in </tspan><tspan x="267" dy="18">memory and </tspan><tspan x="267" dy="18">prints <tspan class="m">JVM</tspan> </tspan><tspan x="267" dy="18"><tspan class="m">code: N of M</tspan>. </tspan><tspan x="267" dy="18">Saves nothing.</tspan></text></g>
+<text class="el" x="124" y="220">each block</text>
+<text class="el" x="124" y="643.5">no (default: 2)</text>
+<text class="el" x="218" y="604.5">yes</text>
+<text class="el" x="218" y="714">no</text>
+<text class="el" x="124" y="790.5">yes</text>
+<text class="nt" x="200" y="1140.5" text-anchor="middle">Both versions are stored as <tspan class="m">pages/&lt;name&gt;.ghar</tspan> → panel 2</text>
+</svg>
+<!-- /diagram:build-page -->
+                <figcaption>
+                    <p id="cap-build-page">Each <code>.pun</code> file is scanned, lexed and parsed, then stored as version 2 (PUN VM instructions) unless <code>--ghar 1</code> is given or the page has a <code>kaam</code> that isn't at page level. Errors stop the build.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 1</summary>
+                    <ol>
+                        <li>Start: a <code>.pun</code> template, literal HTML with <code>&lt;?pun &hellip; ?&gt;</code> blocks.</li>
+                        <li>Template scan splits the page at <code>&lt;?pun</code> and <code>?&gt;</code>. The HTML between blocks is kept as literal text.</li>
+                        <li>For each block, the lexer turns the code into tokens and the parser turns the tokens into a syntax tree (AST). A syntax error, a missing <code>?&gt;</code> or a block longer than 8,388,608 characters stops the build with <code>file:line: message</code>; nothing is written.</li>
+                        <li>The result is a page template: literal and code segments in page order.</li>
+                        <li>If <code>--ghar 1</code> was given, the page is written as a version 1 <code>.ghar</code>: literal HTML plus the serialized AST, for the interpreter.</li>
+                        <li>Otherwise (the default is <code>--ghar 2</code>): if any <code>kaam</code> is inside <code>je</code>, <code>vekh</code>, <code>jad_tak</code>, <code>har_ik</code>, a <code>{ }</code> block or another <code>kaam</code>, this page alone is written as version 1.</li>
+                        <li>Otherwise the PUN VM compiler turns the AST into VM instructions, one unit per <code>kaam</code> and per block, and the page is written as a version 2 <code>.ghar</code>: literal HTML plus the instruction units. Any other compiler or encoding error stops the build; it never falls back to version 1.</li>
+                        <li>Check only: the build decodes and verifies each version 2 page, translates it to JVM code in memory and prints <code>JVM code: N of M units</code>. Nothing JVM is saved.</li>
+                        <li>Both versions are stored as <code>pages/&lt;name&gt;.ghar</code> and packed in panel 2.</li>
+                    </ol>
+                </details>
+            </figure>
+            <figure class="panel" id="panel-2">
+                <h3 id="h-build-bundle"><span class="num" aria-hidden="true">2</span><span class="sr-only">Panel 2: </span>Whole app: package the <code>.pind</code></h3>
+<!-- diagram:build-bundle -->
+<svg class="dg" id="dg-build-bundle" viewBox="0 0 400 1049" width="400" height="1049" role="img" aria-labelledby="h-build-bundle" aria-describedby="cap-build-bundle" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-build-bundle-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<path class="ed" d="M101,122 L101,138 L117,138 L117,154" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M299,122 L299,138 L117,138 L117,154" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M212,191 L256,191" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M117,228 L117,260" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M117,350.5 L117,382.5" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M323,318.5 L323,382.5" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M117,491 L117,523" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M323,491 L323,523" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M117,631.5 L117,663.5" marker-end="url(#dg-build-bundle-ah)"/>
+<path class="ed" d="M117,772 L117,804" marker-end="url(#dg-build-bundle-ah)"/>
+<g class="nd k-blue"><rect class="bx" x="10" y="10" width="182" height="112" rx="8"/><text class="tg" x="21" y="29.3">PACKAGE</text><text class="tt"><tspan x="21" y="51.2">Every page</tspan></text><text class="tb"><tspan x="21" y="71.1">From panel 1, as </tspan><tspan x="21" dy="18"><tspan class="m">pages/&lt;name&gt;.ghar</tspan>, </tspan><tspan x="21" dy="18">with or without a route</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="208" y="10" width="182" height="112" rx="8"/><text class="tg" x="219" y="29.3">PACKAGE</text><text class="tt"><tspan x="219" y="51.2">Public assets</tspan></text><text class="tb"><tspan x="219" y="71.1">Every other file, as </tspan><tspan x="219" dy="18">is. Skips <tspan class="m">.pind</tspan>, <tspan class="m">.ghar</tspan> </tspan><tspan x="219" dy="18">and <tspan class="m">.raah.json</tspan>.</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,154 197,154 212,191 197,228 37,228 22,191"/><text class="tt" text-anchor="middle"><tspan x="117" y="176.9">Source folder </tspan><tspan x="117" dy="19">has </tspan><tspan x="117" dy="19"><tspan class="m">&lt;app&gt;.raah.json</tspan>?</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="256" y="154" width="134" height="164.5" rx="8"/><text class="tg" x="267" y="171.5">ROUTING</text><text class="tt"><tspan x="267" y="193.4">Create </tspan><tspan x="267" dy="19">default </tspan><tspan x="267" dy="19">routes</tspan></text><text class="tb"><tspan x="267" y="251.3"><tspan class="m">/</tspan> → <tspan class="m">index.pun</tspan>, </tspan><tspan x="267" dy="18"><tspan class="m">/&lt;page&gt;.pun</tspan> for </tspan><tspan x="267" dy="18">each page, plus </tspan><tspan x="267" dy="18"><tspan class="m">--alias</tspan> routes</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="260" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="277.5">ROUTING</text><text class="tt"><tspan x="21" y="299.4">Reuse it</tspan></text><text class="tb"><tspan x="21" y="319.3">A new <tspan class="m">--alias</tspan> that is not in </tspan><tspan x="21" dy="18">it stops the build</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="382.5" width="380" height="108.5" rx="8"/><text class="tg" x="21" y="400">ROUTING</text><text class="tt"><tspan x="21" y="421.9">Validate the routes</tspan></text><text class="tb"><tspan x="21" y="441.8">Only <tspan class="m">version</tspan> 1 and <tspan class="m">routes</tspan>. URLs start with <tspan class="m">/</tspan>, with no </tspan><tspan x="21" dy="18"><tspan class="m">?</tspan>, <tspan class="m">#</tspan>, <tspan class="m">%</tspan>, <tspan class="m">..</tspan> or trailing <tspan class="m">/</tspan>. Every route targets a page, </tspan><tspan x="21" dy="18">and <tspan class="m">/</tspan> is required.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="523" width="214" height="108.5" rx="8"/><text class="tg" x="21" y="540.5">ROUTING</text><text class="tt"><tspan x="21" y="562.4">Save new routes</tspan></text><text class="tb"><tspan x="21" y="582.3">Only if just created: </tspan><tspan x="21" dy="18"><tspan class="m">&lt;app&gt;.raah.json</tspan> in the </tspan><tspan x="21" dy="18">source folder</tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="523" width="134" height="108.5" rx="8"/><text class="tg" x="267" y="540.5">STOP</text><text class="tt"><tspan x="267" y="562.4">Build stops</tspan></text><text class="tb"><tspan x="267" y="582.3">Invalid routes, </tspan><tspan x="267" dy="18">or no <tspan class="m">index.pun</tspan> </tspan><tspan x="267" dy="18">and no <tspan class="m">/</tspan> route</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="663.5" width="214" height="108.5" rx="8"/><text class="tg" x="21" y="681">PACKAGE</text><text class="tt"><tspan x="21" y="702.9">Write the manifest</tspan></text><text class="tb"><tspan x="21" y="722.8"><tspan class="m">META-INF/pind.manifest</tspan>, </tspan><tspan x="21" dy="18">one <tspan class="m">page=</tspan> or <tspan class="m">asset=</tspan> line per </tspan><tspan x="21" dy="18">entry</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="804" width="380" height="126.5" rx="8"/><text class="tg" x="21" y="821.5">PACKAGE</text><text class="tt"><tspan x="21" y="843.4">Compress into one <tspan class="m">&lt;app&gt;.pind</tspan></tspan></text><text class="tb"><tspan x="21" y="863.3">A ZIP (deflate) file with <tspan class="m">pages/</tspan>, <tspan class="m">assets/</tspan>, </tspan><tspan x="21" dy="18"><tspan class="m">META-INF/pind.manifest</tspan> and </tspan><tspan x="21" dy="18"><tspan class="m">META-INF/&lt;app&gt;.raah.json</tspan>. Written to a temp file, </tspan><tspan x="21" dy="18">then moved into <tspan class="m">&lt;app&gt;_pind/</tspan>.</tspan></text></g>
+<g class="nd k-check dashed"><rect class="bx" x="10" y="948.5" width="380" height="90.5" rx="8"/><text class="tg" x="21" y="966">NOTE</text><text class="tt"><tspan x="21" y="987.9">Compressed, not encrypted</tspan></text><text class="tb"><tspan x="21" y="1007.8">HTML, names and text values in the pages stay </tspan><tspan x="21" dy="18">readable to anyone with the file.</tspan></text></g>
+<text class="el" x="218" y="185">no</text>
+<text class="el" x="124" y="243">yes</text>
+<text class="el" x="124" y="506">valid</text>
+<text class="el" x="330" y="506">invalid</text>
+</svg>
+<!-- /diagram:build-bundle -->
+                <figcaption>
+                    <p id="cap-build-bundle">Pages and public assets are joined by a route controller, created on the first build and checked on every build, then compressed with a manifest into one <code>.pind</code>.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 2</summary>
+                    <ol>
+                        <li>Inputs: every compiled page from panel 1, routed or not, and every other file in the folder as a public asset. <code>.pind</code>, <code>.ghar</code> and <code>.raah.json</code> files are skipped.</li>
+                        <li>If the source folder has no <code>&lt;app&gt;.raah.json</code>, Pun creates default routes: <code>/</code> to <code>index.pun</code>, <code>/&lt;page&gt;.pun</code> for each page, plus any <code>--alias</code> routes. Otherwise it reuses the file; an <code>--alias</code> that isn't already in it stops the build.</li>
+                        <li>The routes are validated: only <code>version</code> 1 and <code>routes</code>; URLs start with <code>/</code> and contain no <code>?</code>, <code>#</code>, <code>%</code>, <code>..</code> or trailing <code>/</code>; every route targets an existing page; <code>/</code> is required. Invalid routes, or no <code>index.pun</code> and no <code>/</code> route, stop the build.</li>
+                        <li>A newly created controller is saved as <code>&lt;app&gt;.raah.json</code> in the source folder, for you to edit.</li>
+                        <li>The manifest <code>META-INF/pind.manifest</code> lists every page and asset.</li>
+                        <li>Everything is compressed into one ZIP file, <code>&lt;app&gt;.pind</code>: <code>pages/</code>, <code>assets/</code>, the manifest and <code>META-INF/&lt;app&gt;.raah.json</code>. It is written to a temporary file, then moved into <code>&lt;app&gt;_pind/</code>. The output folder must be outside the source folder.</li>
+                        <li>Note: compressed is not encrypted. The HTML, names and text values in the pages stay readable.</li>
+                    </ol>
+                </details>
+            </figure>
+        </div>
+    </div>
+</section>
+
+<section id="runtime">
+    <div class="wrap">
+        <span class="eyebrow">Diagram 2</span>
+        <h2>Runtime: startup, then every request</h2>
+        <p>Start Pun Server with <code>java -jar target/pun-server.jar serve chowk</code>. Startup does the heavy work once. After that, each request only looks up its page and runs it.</p>
+        <!-- legend -->
+        <ul class="legend" aria-label="Diagram key">
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-blue"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Blue: shared steps</strong> <span class="tagname">BUILD &middot; PACKAGE &middot; ROUTING &middot; REQUEST &middot; RESPONSE</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-orange"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Orange: PUN VM</strong> instructions and execution <span class="tagname">PUN VM</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-green"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Green: JVM</strong> compilation and execution <span class="tagname">JVM</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-purple"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Purple: AST interpreter</strong> <span class="tagname">INTERPRETER</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-check"><polygon class="bx" points="6,1 24,1 29,10 24,19 6,19 1,10"/></g></svg><span><strong>Decision</strong>, a question</span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-stop"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Stop</strong>, no fallback <span class="tagname">STOP</span></span></li>
+            <li><svg class="dg" viewBox="0 0 30 20" aria-hidden="true"><g class="k-check dashed"><rect class="bx" x="1" y="1" width="28" height="18" rx="4"/></g></svg><span><strong>Dashed</strong>: a check, a note or a separate activity</span></li>
+        </ul>
+        <!-- /legend -->
+
+        <div class="phase" id="startup"><strong>Server startup</strong><span>Runs once, before the first request</span></div>
+        <div class="panels">
+            <figure class="panel" id="panel-3">
+                <h3 id="h-startup-mount"><span class="num" aria-hidden="true">3</span><span class="sr-only">Panel 3: </span>Mount each bundle</h3>
+<!-- diagram:startup-mount -->
+<svg class="dg" id="dg-startup-mount" viewBox="0 0 400 1111" width="400" height="1111" role="img" aria-labelledby="h-startup-mount" aria-describedby="cap-startup-mount" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-startup-mount-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<g class="band"><rect x="0" y="0" width="400" height="30" rx="6"/><text x="200" y="19.5" text-anchor="middle">SERVER STARTUP · ONCE PER START</text></g>
+<rect class="fr" x="12" y="311" width="376" height="431" rx="10"/>
+<path class="ed" d="M117,116.5 L117,148.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M224,211.8 L256,212.3" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M117,275 L117,333" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M108,423.5 L108,459.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M292,423.5 L292,459.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M108,609.5 L108,641.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M292,609.5 L292,641.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M117,742 L117,774" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M323,742 L323,774" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed" d="M117,864.5 L117,896.5" marker-end="url(#dg-startup-mount-ah)"/>
+<path class="ed dot" d="M117,987 L117,1013" marker-end="url(#dg-startup-mount-ah)"/>
+<g class="nd k-blue"><rect class="bx" x="10" y="44" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="61.5">STARTUP</text><text class="tt"><tspan x="21" y="83.4"><tspan class="m">serve &lt;folder&gt;</tspan></tspan></text><text class="tb"><tspan x="21" y="103.3">or Start Server in Pun Server Manager</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="148.5" width="214" height="126.5" rx="8"/><text class="tg" x="21" y="166">STARTUP</text><text class="tt"><tspan x="21" y="187.9">Find bundles</tspan></text><text class="tb"><tspan x="21" y="207.8">Each subfolder below the </tspan><tspan x="21" dy="18">project folder with one </tspan><tspan x="21" dy="18"><tspan class="m">.pind</tspan> is mounted at its </tspan><tspan x="21" dy="18">path, such as <tspan class="m">/shop_pind</tspan></tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="148.5" width="134" height="127.5" rx="8"/><text class="tg" x="267" y="166">STOP</text><text class="tt"><tspan x="267" y="187.9">Skipped, </tspan><tspan x="267" dy="19">logged</tspan></text><text class="tb"><tspan x="267" y="226.8">Two or more </tspan><tspan x="267" dy="18"><tspan class="m">.pind</tspan> files in </tspan><tspan x="267" dy="18">one folder</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="24" y="333" width="352" height="90.5" rx="8"/><text class="tg" x="35" y="350.5">STARTUP</text><text class="tt"><tspan x="35" y="372.4">Read the ZIP</tspan></text><text class="tb"><tspan x="35" y="392.3">Embedded routes, manifest <tspan class="m">version=1</tspan>, safe page </tspan><tspan x="35" dy="18">and asset paths, no duplicates</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="24" y="459.5" width="168" height="150" rx="8"/><text class="tg" x="35" y="479.8">PUN VM</text><text class="tt"><tspan x="35" y="501.7">Version 2 page</tspan></text><text class="tb"><tspan x="35" y="521.6">Read the VM </tspan><tspan x="35" dy="18">instructions, then </tspan><tspan x="35" dy="18">verify them: operand </tspan><tspan x="35" dy="18">ranges, jump targets, </tspan><tspan x="35" dy="18">stack depth</tspan></text></g>
+<g class="nd k-purple"><rect class="bx" x="208" y="459.5" width="168" height="150" rx="8"/><text class="tg" x="219" y="497.8">INTERPRETER</text><text class="tt"><tspan x="219" y="519.7">Version 1 page</tspan></text><text class="tb"><tspan x="219" y="539.6">Deserialize the AST. </tspan><tspan x="219" dy="18">Only allow-listed </tspan><tspan x="219" dy="18">classes load.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="24" y="641.5" width="352" height="90.5" rx="8"/><text class="tg" x="35" y="659">ROUTING</text><text class="tt"><tspan x="35" y="680.9">Check routes against pages</tspan></text><text class="tb"><tspan x="35" y="700.8">Every route targets a page in the bundle; <tspan class="m">/</tspan> is </tspan><tspan x="35" dy="18">required</tspan></text></g>
+<g class="nd k-green"><rect class="bx" x="10" y="774" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="791.5">JVM</text><text class="tt"><tspan x="21" y="813.4">Prepare JVM code</tspan></text><text class="tb"><tspan x="21" y="833.3">Version 2 pages only. </tspan><tspan x="21" dy="18">Details in panel 4.</tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="774" width="134" height="126.5" rx="8"/><text class="tg" x="267" y="791.5">STOP</text><text class="tt"><tspan x="267" y="813.4">Not mounted</tspan></text><text class="tb"><tspan x="267" y="833.3">Any error above. </tspan><tspan x="267" dy="18">Logged; other </tspan><tspan x="267" dy="18">apps keep </tspan><tspan x="267" dy="18">running.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="896.5" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="914">ROUTING</text><text class="tt"><tspan x="21" y="935.9">App mounted</tspan></text><text class="tb"><tspan x="21" y="955.8">Routes, assets and pages </tspan><tspan x="21" dy="18">stay in memory</tspan></text></g>
+<g class="nd k-check dashed"><rect class="bx" x="10" y="1013" width="380" height="87.5" rx="8"/><text class="tg" x="21" y="1030.5">STARTUP LOG</text><text class="tb"><tspan x="21" y="1051.3"><tspan class="m">Mounted compiled app: /shop_pind (3 pages: 5</tspan> </tspan><tspan x="21" dy="18"><tspan class="m">units, 4 as JVM code, 1 on the VM; 1 version 1</tspan> </tspan><tspan x="21" dy="18"><tspan class="m">on the interpreter; …)</tspan></tspan></text></g>
+<text class="el" x="115" y="438.5">.ghar 2</text>
+<text class="el" x="299" y="438.5">.ghar 1</text>
+<text class="fl" x="22" y="326">LOAD AND VALIDATE · EACH BUNDLE</text>
+<text class="el" x="124" y="757">ok</text>
+<text class="el" x="330" y="757">error</text>
+</svg>
+<!-- /diagram:startup-mount -->
+                <figcaption>
+                    <p id="cap-startup-mount">Pun Server finds every <code>.pind</code> below the project folder, reads and validates it, decodes its pages, prepares JVM code and mounts the app. A bundle that fails any check isn't mounted.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 3</summary>
+                    <ol>
+                        <li><code>serve &lt;folder&gt;</code>, or Start Server in Pun Server Manager, starts the server.</li>
+                        <li>Find bundles: every subfolder below the project folder (not the project folder itself) that holds a <code>.pind</code> is mounted at its path, such as <code>/shop_pind</code>. A folder with two or more <code>.pind</code> files is skipped and logged.</li>
+                        <li>Load and validate each bundle: read the embedded route controller and the manifest (<code>version=1</code>), check every page and asset path, and reject duplicates.</li>
+                        <li>Decode each page. A version 2 page's PUN VM instructions are read and verified: operands in range, jumps landing on instructions, a consistent stack depth within the limit, no path running off the end. A version 1 page's AST is deserialized, accepting only allow-listed classes.</li>
+                        <li>Check the routes again against the pages in the bundle; <code>/</code> is required.</li>
+                        <li>Any error in these steps, including a page that fails verification: the bundle is not mounted and the log says <code>Invalid compiled app</code>. There is no fallback; source apps and other bundles keep working.</li>
+                        <li>Prepare JVM code for version 2 pages (panel 4).</li>
+                        <li>The app is mounted: routes, assets and pages stay in memory, and the startup log reports how many units run as JVM code, how many stay on the VM, and which pages run on the interpreter.</li>
+                    </ol>
+                </details>
+            </figure>
+            <figure class="panel" id="panel-4">
+                <h3 id="h-startup-jvm"><span class="num" aria-hidden="true">4</span><span class="sr-only">Panel 4: </span>Prepare JVM code</h3>
+<!-- diagram:startup-jvm -->
+<svg class="dg" id="dg-startup-jvm" viewBox="0 0 400 816" width="400" height="816" role="img" aria-labelledby="h-startup-jvm" aria-describedby="cap-startup-jvm" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-startup-jvm-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<g class="band"><rect x="0" y="0" width="400" height="30" rx="6"/><text x="200" y="19.5" text-anchor="middle">SERVER STARTUP · EACH VERSION 2 PAGE</text></g>
+<path class="ed" d="M212,81 L234,81 L234,98.8 L256,98.8" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M117,118 L117,154" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M117,262.5 L117,294.5" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M212,341 L234,341 L234,370.8 L256,370.8" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M117,387.5 L117,487" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M224,541.3 L240,541.3 L240,559.8 L256,559.8" marker-end="url(#dg-startup-jvm-ah)"/>
+<path class="ed" d="M117,595.5 L117,627.5" marker-end="url(#dg-startup-jvm-ah)"/>
+<g class="nd k-check"><polygon class="bx" points="37,44 197,44 212,81 197,118 37,118 22,81"/><text class="tt" text-anchor="middle"><tspan x="117" y="66.9">JVM tier on?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="86.8">Off with </tspan><tspan x="117" dy="18"><tspan class="m">-Dpun.vm.jvm=false</tspan></tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="256" y="44" width="134" height="109.5" rx="8"/><text class="tg" x="267" y="61.5">PUN VM</text><text class="tt"><tspan x="267" y="83.4">Every unit on </tspan><tspan x="267" dy="19">the PUN VM</tspan></text><text class="tb"><tspan x="267" y="122.3">Nothing is </tspan><tspan x="267" dy="18">translated</tspan></text></g>
+<g class="nd k-green"><rect class="bx" x="10" y="154" width="214" height="108.5" rx="8"/><text class="tg" x="21" y="171.5">JVM</text><text class="tt"><tspan x="21" y="193.4">Translate each unit</tspan></text><text class="tb"><tspan x="21" y="213.3">One static method per <tspan class="m">kaam</tspan> </tspan><tspan x="21" dy="18">and per block, in one class </tspan><tspan x="21" dy="18">per page</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,294.5 197,294.5 212,341 197,387.5 37,387.5 22,341"/><text class="tt" text-anchor="middle"><tspan x="117" y="317.4">Method ≤ 8,000 </tspan><tspan x="117" dy="19">bytes?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="356.3">JVM bytecode, one </tspan><tspan x="117" dy="18">unit at a time</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="256" y="288.5" width="134" height="164.5" rx="8"/><text class="tg" x="267" y="306">PUN VM</text><text class="tt"><tspan x="267" y="327.9">This unit </tspan><tspan x="267" dy="19">stays on the </tspan><tspan x="267" dy="19">PUN VM</tspan></text><text class="tb"><tspan x="267" y="385.8">Others are </tspan><tspan x="267" dy="18">rebuilt without </tspan><tspan x="267" dy="18">direct calls to </tspan><tspan x="267" dy="18">it</tspan></text></g>
+<g class="nd k-green"><rect class="bx" x="10" y="487" width="214" height="108.5" rx="8"/><text class="tg" x="21" y="504.5">JVM</text><text class="tt"><tspan x="21" y="526.4">Load the class</tspan></text><text class="tb"><tspan x="21" y="546.3">Defined in memory with its </tspan><tspan x="21" dy="18">own class loader. The JVM </tspan><tspan x="21" dy="18">verifies it.</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="256" y="487" width="134" height="145.5" rx="8"/><text class="tg" x="267" y="504.5">PUN VM</text><text class="tt"><tspan x="267" y="526.4">Whole page on </tspan><tspan x="267" dy="19">the PUN VM</tspan></text><text class="tb"><tspan x="267" y="565.3">Translation </tspan><tspan x="267" dy="18">error, or the </tspan><tspan x="267" dy="18">JVM rejects the </tspan><tspan x="267" dy="18">class</tspan></text></g>
+<g class="nd k-green"><rect class="bx" x="10" y="627.5" width="214" height="90.5" rx="8"/><text class="tg" x="21" y="645">JVM</text><text class="tt"><tspan x="21" y="666.9">Units ready as JVM code</tspan></text><text class="tb"><tspan x="21" y="686.8">Shared by every request </tspan><tspan x="21" dy="18">until the server stops</tspan></text></g>
+<g class="nd k-check dashed"><rect class="bx" x="10" y="736" width="380" height="69.5" rx="8"/><text class="tg" x="21" y="753.5">MEMORY ONLY</text><text class="tb"><tspan x="21" y="774.3">Generated classes are never written into the <tspan class="m">.pind</tspan>. </tspan><tspan x="21" dy="18">They are made again each time the server starts.</tspan></text></g>
+<text class="el" x="218" y="75">no</text>
+<text class="el" x="124" y="133">yes</text>
+<text class="el" x="218" y="335">no</text>
+<text class="el" x="124" y="402.5">yes</text>
+<text class="el" x="124" y="610.5">ok</text>
+</svg>
+<!-- /diagram:startup-jvm -->
+                <figcaption>
+                    <p id="cap-startup-jvm">For each version 2 page, every unit (a <code>kaam</code> or a <code>&lt;?pun</code> block) becomes a JVM method unless the tier is off, the method would be too large, or the class can't be built. Anything left over runs on the PUN VM.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 4</summary>
+                    <ol>
+                        <li>If the server was started with <code>-Dpun.vm.jvm=false</code>, nothing is translated and every unit runs on the PUN VM.</li>
+                        <li>Otherwise each unit is translated to one static JVM method, all in one class for the page.</li>
+                        <li>A unit whose method would be more than 8,000 bytes of JVM bytecode stays on the PUN VM, and the other units are translated again without direct calls to it.</li>
+                        <li>The class is defined in memory by its own class loader, and the JVM verifies it.</li>
+                        <li>If translation throws an error, or the JVM rejects the class, every unit of that page stays on the PUN VM, and one warning goes to stderr.</li>
+                        <li>Otherwise the units are ready as JVM code, shared by every request until the server stops.</li>
+                        <li>Generated classes live only in memory. They are never written into the <code>.pind</code>, and they are made again on every start.</li>
+                    </ol>
+                </details>
+            </figure>
+        </div>
+
+        <h3 id="jvm-tier">The JVM tier in detail</h3>
+        <div class="grid2">
+            <div class="card">
+                <h3><code>-Dpun.vm.jvm=false</code></h3>
+                <p>A JVM option, placed before <code>-jar</code>:</p>
+                <pre class="code">java -Dpun.vm.jvm=false -jar target/pun-server.jar serve chowk</pre>
+                <p>Pun Server then makes no JVM classes, and every unit of every version 2 page runs on the PUN VM. The bundle and the page output stay the same; only speed changes. Version 1 and source pages aren't affected. Only the value <code>false</code>, in any letter case, turns the tier off. Given to <code>build</code>, it makes the dry run report <code>JVM code: 0 of N units</code>.</p>
+            </div>
+            <div class="card">
+                <h3>The 8,000-byte limit</h3>
+                <p>Pun translates one unit at a time: each <code>kaam</code> and each <code>&lt;?pun &hellip; ?&gt;</code> block. While it writes a unit's JVM method it counts the method's bytecode. Past 8,000 bytes it gives up on that unit, which stays on the PUN VM; exactly 8,000 is still translated. The limit is per unit, not per page or bundle, and it counts JVM bytecode, not Pun source lines or VM instructions.</p>
+                <p>8,000 is HotSpot's <code>HugeMethodLimit</code>: by default HotSpot never compiles a larger method to machine code. A unit also stays on the VM if its method would need more than 65,535 local variables or it has more than 250 parameters.</p>
+            </div>
+            <div class="card">
+                <h3>When translation fails</h3>
+                <p>If translating a page throws an error, or the JVM refuses to define, verify or initialise the generated class, every unit of that page stays on the PUN VM, which runs the same instructions with the same output. Pun prints one warning to stderr, only for the first such page in a server run, and the startup log lists the page under <code>on the VM</code>. Other pages keep their JVM code.</p>
+            </div>
+            <div class="card">
+                <h3>Where the classes live</h3>
+                <p>One class per version 2 page, written as bytes in memory and defined by its own class loader while the bundle loads. Nothing is added to the <code>.pind</code> or written to disk, and the classes are made again on every start. For debugging, <code>-Dpun.vm.jvm.dump=&lt;folder&gt;</code> writes a copy of each class there, to read with <code>javap -c -p</code>.</p>
+            </div>
+        </div>
+
+        <div class="phase request" id="each-request"><strong>Each HTTP request</strong><span>Runs every time, with fresh state</span></div>
+        <div class="panels">
+            <figure class="panel" id="panel-5">
+                <h3 id="h-request"><span class="num" aria-hidden="true">5</span><span class="sr-only">Panel 5: </span>One request to a compiled app</h3>
+<!-- diagram:request -->
+<svg class="dg" id="dg-request" viewBox="0 0 400 1431" width="400" height="1431" role="img" aria-labelledby="h-request" aria-describedby="cap-request" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-request-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<g class="band"><rect x="0" y="0" width="400" height="30" rx="6"/><text x="200" y="19.5" text-anchor="middle">EACH HTTP REQUEST · FRESH STATE EVERY TIME</text></g>
+<rect class="fr" x="10" y="754" width="214" height="259" rx="10"/>
+<line class="rl" x1="10" y1="1276" x2="390" y2="1276"/>
+<path class="ed" d="M117,116.5 L117,148.5" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M212,203.5 L256,203.5" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M117,258.5 L117,294.5" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M212,341 L256,341" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M117,387.5 L117,423.5" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M212,460.5 L234,460.5 L234,486.3 L256,486.3" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M117,497.5 L117,543.5" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M117,652 L117,684" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M212,702 L256,702" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M55,866.5 L55,912.5" marker-end="url(#dg-request-ah)" marker-start="url(#dg-request-ah)"/>
+<path class="ed" d="M117,720 L117,754" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M117,1013 L117,1045" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M323,793.5 L323,1045" marker-end="url(#dg-request-ah)"/>
+<path class="ed" d="M200,1153.5 L200,1185.5" marker-end="url(#dg-request-ah)"/>
+<g class="nd k-blue"><rect class="bx" x="10" y="44" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="61.5">REQUEST</text><text class="tt"><tspan x="21" y="83.4">Browser asks for a URL</tspan></text><text class="tb"><tspan x="21" y="103.3"><tspan class="m">GET /shop_pind/dashboard</tspan></tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,148.5 197,148.5 212,203.5 197,258.5 37,258.5 22,203.5"/><text class="tt" text-anchor="middle"><tspan x="117" y="171.4">Protected path?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="191.3">A segment is </tspan><tspan x="117" dy="18"><tspan class="m">META-INF</tspan> or ends in </tspan><tspan x="117" dy="18"><tspan class="m">.pind</tspan>, <tspan class="m">.ghar</tspan>, </tspan><tspan x="117" dy="18"><tspan class="m">.raah.json</tspan></tspan></text></g>
+<g class="nd k-stop"><rect class="bx" x="256" y="148.5" width="134" height="110" rx="8"/><text class="tg" x="267" y="175.8">STOP</text><text class="tt"><tspan x="267" y="197.7">404 Not found</tspan></text><text class="tb"><tspan x="267" y="217.6">Checked before </tspan><tspan x="267" dy="18">any routing</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,294.5 197,294.5 212,341 197,387.5 37,387.5 22,341"/><text class="tt" text-anchor="middle"><tspan x="117" y="317.4">Inside a mounted </tspan><tspan x="117" dy="19">app?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="356.3">Longest matching </tspan><tspan x="117" dy="18">mount path</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="256" y="294.5" width="134" height="93" rx="8"/><text class="tg" x="267" y="313.3">ROUTING</text><text class="tt"><tspan x="267" y="335.2">Source folder</tspan></text><text class="tb"><tspan x="267" y="355.1">Files on disk. </tspan><tspan x="267" dy="18">See panel 6.</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,423.5 197,423.5 212,460.5 197,497.5 37,497.5 22,460.5"/><text class="tt" text-anchor="middle"><tspan x="117" y="446.4">In the route map?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="466.3"><tspan class="m">/dashboard</tspan> → </tspan><tspan x="117" dy="18"><tspan class="m">dashboard.pun</tspan></tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="256" y="413.5" width="134" height="145.5" rx="8"/><text class="tg" x="267" y="431">STATIC</text><text class="tt"><tspan x="267" y="452.9">Bundle asset, </tspan><tspan x="267" dy="19">or 404</tspan></text><text class="tb"><tspan x="267" y="491.8">Bytes from </tspan><tspan x="267" dy="18">memory, typed by </tspan><tspan x="267" dy="18">extension. No </tspan><tspan x="267" dy="18">Pun code runs.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="543.5" width="214" height="108.5" rx="8"/><text class="tg" x="21" y="561">REQUEST</text><text class="tt"><tspan x="21" y="582.9">Fresh request state</tspan></text><text class="tb"><tspan x="21" y="602.8">New <tspan class="m">mang</tspan>, <tspan class="m">jawab</tspan> and </tspan><tspan x="21" dy="18">variables. The compiled </tspan><tspan x="21" dy="18">page is shared.</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,684 197,684 212,702 197,720 37,720 22,702"/><text class="tt" text-anchor="middle"><tspan x="117" y="706.9">Version 1 page?</tspan></text></g>
+<g class="nd k-purple"><rect class="bx" x="256" y="684" width="134" height="109.5" rx="8"/><text class="tg" x="267" y="701.5">INTERPRETER</text><text class="tt"><tspan x="267" y="723.4">AST </tspan><tspan x="267" dy="19">interpreter</tspan></text><text class="tb"><tspan x="267" y="762.3">Walks the shared </tspan><tspan x="267" dy="18">syntax tree</tspan></text></g>
+<g class="nd k-green"><rect class="bx" x="20" y="776" width="194" height="90.5" rx="8"/><text class="tg" x="31" y="793.5">JVM</text><text class="tt"><tspan x="31" y="815.4">JVM code</tspan></text><text class="tb"><tspan x="31" y="835.3">Units translated at </tspan><tspan x="31" dy="18">startup</tspan></text></g>
+<g class="nd k-orange"><rect class="bx" x="20" y="912.5" width="194" height="90.5" rx="8"/><text class="tg" x="31" y="930">PUN VM</text><text class="tt"><tspan x="31" y="951.9">PUN VM loop</tspan></text><text class="tb"><tspan x="31" y="971.8">Units that stayed on the </tspan><tspan x="31" dy="18">VM</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="1045" width="380" height="108.5" rx="8"/><text class="tg" x="21" y="1062.5">RESPONSE</text><text class="tt"><tspan x="21" y="1084.4">Finish the response</tspan></text><text class="tb"><tspan x="21" y="1104.3">Applies <tspan class="m">jawab.status</tspan> and <tspan class="m">jawab.type</tspan>. Output is </tspan><tspan x="21" dy="18">buffered in memory up to 64 KiB, then in a temp file. A </tspan><tspan x="21" dy="18">Pun error sends a 500 error page instead.</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="1185.5" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="1203">RESPONSE</text><text class="tt"><tspan x="21" y="1224.9">Sent to the browser</tspan></text><text class="tb"><tspan x="21" y="1244.8">Status, content type and length, then the page</tspan></text></g>
+<g class="nd k-green dashed"><rect class="bx" x="10" y="1294" width="380" height="126.5" rx="8"/><text class="tg" x="21" y="1311.5">JVM · SEPARATE ACTIVITY</text><text class="tt"><tspan x="21" y="1333.4">HotSpot JIT, meanwhile</tspan></text><text class="tb"><tspan x="21" y="1353.3">The JVM compiles hot Java methods to machine code: </tspan><tspan x="21" dy="18">generated page classes, the PUN VM loop and the </tspan><tspan x="21" dy="18">interpreter alike. It never chooses which Pun engine </tspan><tspan x="21" dy="18">runs a unit.</tspan></text></g>
+<text class="el" x="218" y="197.5">yes</text>
+<text class="el" x="124" y="273.5">no</text>
+<text class="el" x="218" y="335">no</text>
+<text class="el" x="124" y="402.5">yes</text>
+<text class="el" x="218" y="454.5">no</text>
+<text class="el" x="124" y="512.5">yes</text>
+<text class="el" x="218" y="696">yes</text>
+<text class="el" x="65" y="893.5"><tspan class="m">kaam</tspan> calls go both ways</text>
+<text class="fl" x="20" y="769">RENDER · LITERAL HTML AS IS</text>
+<text class="el" x="124" y="735">no: version 2</text>
+</svg>
+<!-- /diagram:request -->
+                <figcaption>
+                    <p id="cap-request">The URL is checked, matched to a mounted app and looked up in its route map. A page gets fresh request state and runs on the interpreter, or as JVM code and PUN VM units that call each other. HotSpot's JIT works separately.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 5</summary>
+                    <ol>
+                        <li>The browser asks for a URL, such as <code>GET /shop_pind/dashboard</code>.</li>
+                        <li>If any path segment is <code>META-INF</code> or ends in <code>.pind</code>, <code>.ghar</code> or <code>.raah.json</code> (any letter case), the answer is 404. This is checked before any routing.</li>
+                        <li>If the path isn't inside a mounted app (the longest matching mount path wins), the request goes to the source folder (panel 6). The bare mount path, <code>/shop_pind</code>, is redirected to <code>/shop_pind/</code>.</li>
+                        <li>The rest of the path is looked up in the app's route map, such as <code>/dashboard</code> to <code>dashboard.pun</code>. If it isn't a route, it is looked up in the bundle's assets and sent from memory with a type from its extension; no Pun code runs. Otherwise the answer is 404.</li>
+                        <li>For a page, fresh request state is made: new <code>mang</code> (GET and POST values), new <code>jawab</code> (status 200, <code>text/html</code>) and new variables. The compiled page itself is shared.</li>
+                        <li>A version 1 page runs on the AST interpreter, which walks the shared syntax tree.</li>
+                        <li>A version 2 page renders its segments in order: literal HTML is written as is, and each unit runs as JVM code or on the PUN VM loop, wherever startup put it. A <code>kaam</code> call can go from JVM code to a VM unit and from a VM unit to JVM code in the same request.</li>
+                        <li>The response is finished: <code>jawab.status</code> and <code>jawab.type</code> are applied, and the output is buffered in memory up to 64 KiB, then in a temporary file. A Pun syntax or runtime error sends a 500 error page instead.</li>
+                        <li>The status, content type, length and page are sent to the browser.</li>
+                        <li>Separately, HotSpot's JIT compiles hot Java methods to machine code: the generated classes, the PUN VM loop and the interpreter alike. It never chooses which Pun engine runs a unit.</li>
+                    </ol>
+                </details>
+            </figure>
+            <div class="grid-aside">
+                <div class="card">
+                    <h3>Static asset or dynamic page?</h3>
+                    <p>A path in the route map runs a page. Any other path is looked up among the bundle's assets and sent straight from memory, typed by its extension; no Pun code runs. Anything else is a 404: a mounted app never falls through to files on disk.</p>
+                </div>
+                <div class="card">
+                    <h3>JVM code and the PUN VM, together</h3>
+                    <p>Each unit runs where startup put it. When JVM code calls a <code>kaam</code> that stayed on the PUN VM, that <code>kaam</code> runs on the VM loop; when VM code calls a translated <code>kaam</code>, it enters the JVM method. Both use the same request's variables, so the output matches an all-VM run.</p>
+                </div>
+                <div class="card">
+                    <h3>HotSpot JIT is separate</h3>
+                    <p>HotSpot is the JVM's own just-in-time compiler. It watches all running Java code, including the generated page classes, the PUN VM loop and the interpreter, and compiles hot methods to machine code. That's why new JVM code starts slow and speeds up over the first few hundred requests. HotSpot never decides whether a unit runs as JVM code or on the PUN VM; Pun settles that when the bundle loads.</p>
+                </div>
+                <div class="card">
+                    <h3>See which engine ran</h3>
+                    <p>Start the server with <code>-Dpun.engine.header=true</code> and each Pun response carries <code>X-Pun-Engine</code>: <code>jvm</code>, <code>vm</code>, <code>jvm+vm (n units on the VM)</code> or <code>interpreter</code>. It's meant for benchmarks; leave it off in production.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="fallback">
+    <div class="wrap">
+        <span class="eyebrow">Exact rules</span>
+        <h2>Fallback rules</h2>
+        <p>Every case where a page or unit ends up on another engine, and the errors that stop instead. No error silently switches a page to version 1.</p>
+        <div class="table-scroll">
+            <table>
+                <thead><tr><th>Situation</th><th>When</th><th>What happens</th></tr></thead>
+                <tbody>
+                    <tr><td><code>build --ghar 1</code></td><td class="when">Build</td><td>Every page is written as version 1 (AST for the interpreter). The PUN VM compiler doesn't run. Use it for servers older than PUN 4.0.0.</td></tr>
+                    <tr><td>A <code>kaam</code> inside <code>je</code>, <code>vekh</code>, <code>jad_tak</code>, <code>har_ik</code>, a <code>{ }</code> block or another <code>kaam</code></td><td class="when">Build</td><td>That page alone is written as version 1. The build says how many pages it kept, for example <code>(2 compiled for the VM, 1 kept as version 1)</code>.</td></tr>
+                    <tr><td>Syntax error, a <code>&lt;?pun</code> without <code>?&gt;</code>, or a block longer than 8,388,608 characters</td><td class="when">Build</td><td>The build stops with <code>Build failed: file:line: message</code>. No bundle and no route file are written.</td></tr>
+                    <tr><td>Any other PUN VM compiler or encoding error</td><td class="when">Build</td><td>The build stops. It does not fall back to version 1.</td></tr>
+                    <tr><td>A bundle can't be loaded: a bad ZIP, manifest or route controller, or a version 2 page that fails verification</td><td class="when">Startup</td><td>That bundle isn't mounted, and the log says <code>Invalid compiled app</code>. No fallback; source apps and other bundles keep working.</td></tr>
+                    <tr><td><code>-Dpun.vm.jvm=false</code></td><td class="when">Startup</td><td>Every unit of every version 2 page runs on the PUN VM.</td></tr>
+                    <tr><td>A unit's JVM method would be over 8,000 bytes</td><td class="when">Startup</td><td>That unit runs on the PUN VM; the page's other units stay JVM code.</td></tr>
+                    <tr><td>JVM translation throws, or the JVM rejects the generated class</td><td class="when">Startup</td><td>Every unit of that page runs on the PUN VM. Other pages are unaffected.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="source-pages">
+    <div class="wrap">
+        <span class="eyebrow">Without a build</span>
+        <h2>Source <code>.pun</code> pages</h2>
+        <div class="panels">
+            <figure class="panel" id="panel-6">
+                <h3 id="h-source"><span class="num" aria-hidden="true">6</span><span class="sr-only">Panel 6: </span>A request for a <code>.pun</code> file</h3>
+<!-- diagram:source -->
+<svg class="dg" id="dg-source" viewBox="0 0 400 794" width="400" height="794" role="img" aria-labelledby="h-source" aria-describedby="cap-source" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="dg-source-ah" viewBox="0 0 10 10" refX="9.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path class="ah" d="M0,0.8 L10,5 L0,9.2 z"/></marker></defs>
+<path class="ed" d="M200,82.5 L200,114.5" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M117,205 L117,237" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M212,255 L234,255 L234,268.3 L256,268.3" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M117,273 L117,349.5" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M117,423.5 L117,459.5" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M212,386.5 L234,386.5 L234,451 L256,451" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M212,506 L234,506 L234,451 L256,451" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M117,552.5 L117,588.5" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M117,661 L117,693" marker-end="url(#dg-source-ah)"/>
+<path class="ed" d="M323,552.5 L323,693" marker-end="url(#dg-source-ah)"/>
+<g class="nd k-blue"><rect class="bx" x="10" y="10" width="380" height="72.5" rx="8"/><text class="tg" x="21" y="27.5">REQUEST</text><text class="tt"><tspan x="21" y="49.4">Browser asks for a source file</tspan></text><text class="tb"><tspan x="21" y="69.3"><tspan class="m">GET /sample_site/dashboard.pun</tspan></tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="114.5" width="380" height="90.5" rx="8"/><text class="tg" x="21" y="132">ROUTING</text><text class="tt"><tspan x="21" y="153.9">File checks</tspan></text><text class="tb"><tspan x="21" y="173.8">Inside the project folder, not protected, exists. A </tspan><tspan x="21" dy="18">folder serves <tspan class="m">index.pun</tspan>, then <tspan class="m">index.html</tspan>.</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,237 197,237 212,255 197,273 37,273 22,255"/><text class="tt" text-anchor="middle"><tspan x="117" y="259.9"><tspan class="m">.pun</tspan> file?</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="256" y="223" width="134" height="90.5" rx="8"/><text class="tg" x="267" y="240.5">STATIC</text><text class="tt"><tspan x="267" y="262.4">Static file</tspan></text><text class="tb"><tspan x="267" y="282.3">Streamed from </tspan><tspan x="267" dy="18">disk</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,349.5 197,349.5 212,386.5 197,423.5 37,423.5 22,386.5"/><text class="tt" text-anchor="middle"><tspan x="117" y="372.4">Cacheable?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="392.3">≤ 128 KiB and the </tspan><tspan x="117" dy="18">cache is on</tspan></text></g>
+<g class="nd k-check"><polygon class="bx" points="37,459.5 197,459.5 212,506 197,552.5 37,552.5 22,506"/><text class="tt" text-anchor="middle"><tspan x="117" y="482.4">Cached AST </tspan><tspan x="117" dy="19">matches?</tspan></text><text class="tb" text-anchor="middle"><tspan x="117" y="521.3">Same size, modified </tspan><tspan x="117" dy="18">time and file key</tspan></text></g>
+<g class="nd k-purple"><rect class="bx" x="256" y="349.5" width="134" height="203" rx="8"/><text class="tg" x="267" y="387.3">INTERPRETER</text><text class="tt"><tspan x="267" y="409.2">Parse and run</tspan></text><text class="tb"><tspan x="267" y="429.1">Each block in </tspan><tspan x="267" dy="18">turn: scan, lex, </tspan><tspan x="267" dy="18">parse, run. The </tspan><tspan x="267" dy="18">AST is kept if </tspan><tspan x="267" dy="18">the file may be </tspan><tspan x="267" dy="18">cached.</tspan></text></g>
+<g class="nd k-purple"><rect class="bx" x="10" y="588.5" width="214" height="72.5" rx="8"/><text class="tg" x="21" y="606">INTERPRETER</text><text class="tt"><tspan x="21" y="627.9">Run the cached AST</tspan></text><text class="tb"><tspan x="21" y="647.8">No lexing or parsing</tspan></text></g>
+<g class="nd k-blue"><rect class="bx" x="10" y="693" width="380" height="90.5" rx="8"/><text class="tg" x="21" y="710.5">RESPONSE</text><text class="tt"><tspan x="21" y="732.4">Response</tspan></text><text class="tb"><tspan x="21" y="752.3">Every request still gets new variables, <tspan class="m">mang</tspan> and </tspan><tspan x="21" dy="18"><tspan class="m">jawab</tspan></tspan></text></g>
+<text class="el" x="218" y="249">no</text>
+<text class="el" x="124" y="288">yes</text>
+<text class="el" x="124" y="438.5">yes</text>
+<text class="el" x="218" y="380.5">no</text>
+<text class="el" x="218" y="500">no</text>
+<text class="el" x="124" y="567.5">yes</text>
+</svg>
+<!-- /diagram:source -->
+                <figcaption>
+                    <p id="cap-source">Pages served straight from the folder always run on the AST interpreter. Small, unchanged files reuse their parsed AST; everything else is parsed as it runs.</p>
+                </figcaption>
+                <details class="textalt">
+                    <summary>Text description of panel 6</summary>
+                    <ol>
+                        <li>The browser asks for a file in the source folder, such as <code>GET /sample_site/dashboard.pun</code>.</li>
+                        <li>File checks: the path must stay inside the project folder, must not be protected, and must exist. A folder serves its <code>index.pun</code>, then its <code>index.html</code>.</li>
+                        <li>A file that isn't <code>.pun</code> is a static file, streamed from disk.</li>
+                        <li>A <code>.pun</code> file larger than 128 KiB, or with the cache turned off, is parsed and run block by block, and nothing is kept.</li>
+                        <li>Otherwise, if the cached AST still matches the file (same size, modified time and file key), the interpreter runs it with no lexing or parsing.</li>
+                        <li>If not, the page is parsed and run block by block, and its AST is cached if the file didn't change meanwhile.</li>
+                        <li>Every request still gets new variables, <code>mang</code> and <code>jawab</code>.</li>
+                    </ol>
+                </details>
+            </figure>
+            <div class="grid-aside">
+                <div class="card">
+                    <h3>Always the interpreter</h3>
+                    <p>Plain <code>.pun</code> pages, served from the folder without a <code>build</code>, keep the original path: template scan, lexer, parser and AST interpreter. They never use the PUN VM or JVM code.</p>
+                    <p>Pun Server keeps the parsed AST of unchanged files up to 128 KiB (128 files and 16 MiB in all), so repeat requests skip the lexer and parser. Edit a file and the next request parses it again. The limits are set with the <a href="index.html#caching"><code>-Dpun.cache.*</code> options</a>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="security">
+    <div class="wrap">
+        <span class="eyebrow">Security</span>
+        <h2>Bundles and protected files</h2>
+        <div class="grid3">
+            <div class="card">
+                <h3>Bundling is not encryption</h3>
+                <p>A <code>.pind</code> is an ordinary ZIP file. Anyone with a copy can unzip it and read the HTML, names and text values in its pages, including a database password written in a <code>.pun</code> file. Version 1 pages hold the serialized syntax tree and version 2 pages the VM instructions; neither is protected. Treat a bundle like its source.</p>
+            </div>
+            <div class="card">
+                <h3>What Pun Server blocks</h3>
+                <p>Pun Server answers 404 to any URL with a path segment named <code>META-INF</code>, or ending in <code>.pind</code>, <code>.ghar</code> or <code>.raah.json</code>, in any letter case. It checks before routing, for compiled apps and source folders alike.</p>
+                <p>That only covers requests Pun Server handles. If a separate web server or reverse proxy serves the folder itself, configure it to refuse those files, or keep them out of its public folder.</p>
+            </div>
+            <div class="card">
+                <h3>Every other file becomes public</h3>
+                <p><code>build</code> packs every file in the source folder that isn't a <code>.pun</code> page as a public asset, dotfiles included. A <code>.env</code> inside the folder ends up in the bundle, and the mounted app serves it, for example at <code>/shop_pind/.env</code>. Keep secrets outside the folder you build.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<div class="phulkari" aria-hidden="true"></div>
+<footer>
+    <div class="wrap">
+        <span>PUN 4.0.0 &middot; Hisaab Pakka, Chaal Tez! 🚀 &middot;<span class="pa" lang="pa">ਜੀ ਆਇਆਂ ਨੂੰ</span></span>
+        <span>Developed by Suneet Chaudhary &middot; <a href="https://www.linkedin.com/in/suneetchaudhary" rel="author">LinkedIn</a> &middot; <a href="https://github.com/skgchaudhary/pun">GitHub</a></span>
+    </div>
+</footer>
+</body>
+</html>

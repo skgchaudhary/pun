@@ -76,7 +76,7 @@ header.top .wrap { display: flex; align-items: center; gap: 12px 20px; padding-t
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink); text-decoration: none; }
 .brand img { width: 28px; height: 28px; border-radius: 6px; }
 .brand span { color: var(--kesri); }
-header.top nav { display: flex; gap: 4px 16px; flex-wrap: wrap; font-size: .92rem; }
+header.top nav { display: flex; gap: 4px 12px; flex-wrap: wrap; font-size: .92rem; }
 header.top nav a { color: var(--muted); text-decoration: none; }
 header.top nav a:hover { color: var(--kesri); }
 
@@ -170,7 +170,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <div class="phulkari" aria-hidden="true"></div>
 <header class="top">
     <div class="wrap">
-        <a class="brand" href="#top"><img src="pun_logo.png" alt="">Pun<span>.</span></a>
+        <a class="brand" href="#top"><img src="pun_logo.png" alt="">PUN<span>.</span></a>
         <nav aria-label="Sections">
             <a href="#start">Get started</a>
             <a href="#run">Run Pun Server</a>
@@ -180,6 +180,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
             <a href="#database">MySQL</a>
             <a href="#cheatsheet">Cheat sheet</a>
             <a href="dsa-performance.html">DSA performance</a>
+            <a href="vasatukala.html">PUN Vasatukala</a>
             <a href="#about">About Developer</a>
         </nav>
     </div>
@@ -226,6 +227,7 @@ dasso "&lt;p&gt;Sat Sri Akal " + naam + "&lt;/p&gt;"
             <li><a href="#cli">Run Pun Server: command line</a></li>
             <li><a href="#repl">The REPL</a></li>
             <li><a href="#pind">Compiled apps (.pind)</a></li>
+            <li><a href="vasatukala.html">Architecture diagrams (PUN Vasatukala)</a></li>
             <li><a href="#language">Script blocks</a></li>
             <li><a href="#keywords">Keywords</a></li>
             <li><a href="#values">Values and printing</a></li>
@@ -357,7 +359,7 @@ pun&gt; :quit</pre>
     "/dashboard": "dashboard.pun"
   }
 }</pre>
-        <p>New in PUN 4.0.0: when Pun Server mounts a bundle, it turns each compiled page into JVM code, which Java compiles to machine code as the page is used. Output and error messages are the same as running the source. On the sample_dsa benchmark a compiled page runs about 8.5 times faster than in PUN 3.0.0, and takes about 1.5 to 1.8 times as long as the same page in PHP 8.3 with OPcache.</p>
+        <p>New in PUN 4.0.0: when Pun Server mounts a bundle, it turns each compiled page into JVM code, which Java compiles to machine code as the page is used. Output and error messages are the same as running the source. On the sample_dsa benchmark a compiled page runs about 8.5 times faster than in PUN 3.0.0, and takes about 1.5 to 1.8 times as long as the same page in PHP 8.3 with OPcache. <a href="vasatukala.html">PUN Vasatukala</a> draws the whole build and runtime flow.</p>
         <p>When it starts, Pun Server mounts every subfolder that holds a <code>.pind</code> at that folder's path. So <code>serve chowk</code> runs the source app at <code>/sample_site/</code> and the compiled one at <code>/sample_site_pind/</code> on the same port. A compiled app answers only the URLs in its routes and the assets in the bundle; <code>.pind</code>, <code>.ghar</code>, <code>.raah.json</code> and <code>META-INF</code> files are never sent. To deploy, copy just the <code>.pind</code> into its folder, and restart the server after a rebuild to load the new bundle. Behind a reverse proxy or a separate static file server, pass those files to Pun Server or serve static files from a folder that doesn't contain them.</p>
         <div class="note"><strong>Passwords end up in the bundle.</strong> <code>build</code> compiles every <code>.pun</code> page in the folder, including pages with no route, and text such as database passwords stays readable inside the <code>.pind</code>. Treat a bundle like its source: don't commit or share one built from a folder whose pages hold secrets. This repository git-ignores <code>*.pind</code> for that reason.</div>
     </div>
